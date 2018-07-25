@@ -20,6 +20,7 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 GH_PAGES_SOURCES = neurolang Makefile
 
+EXPRESSION_CLASSES = `grep -e '^class' ../neurolang/expressions.py | grep -v -e "Meta\|Exception" | sed -e "s/class./neurolang.expressions./g;s/(.*//g" | tr '\n' ' '`
 
 .PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext
 
