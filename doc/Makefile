@@ -18,8 +18,7 @@ PAPEROPT_letter = -D latex_paper_size=letter
 ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 # the i18n builder cannot share the environment and doctrees with the others
 I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
-EXPRESSION_CLASSES = `grep -e '^class' ../neurolang/expressions.py | grep -v -e "Meta\|Exception" | sed -e "s/class./neurolang.expressions./g;s/(.*//g" | tr '\n' ' '`
-
+GH_PAGES_SOURCES = neurolang Makefile
 
 
 .PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext
@@ -184,3 +183,14 @@ pseudoxml:
 
 show:
 	@python -c "import webbrowser; webbrowser.open_new_tab('file://$(PWD)/_build/html/index.html')"
+
+gh-pages:
+	git checkout gh-pages
+	rm -rf build _sources _static
+	git checkout docs $(GH_PAGES_SOURCES)
+	git reset HEAD
+	make html
+	mv -fv build/html/* ./
+	rm -rf $(GH_PAGES_SOURCES) build
+	git add -A
+	git ci -m "Generated gh-pages for `git log master -1 --pretty=short --abbrev-commit`" && git push origin gh-pages ; git checkout docs
