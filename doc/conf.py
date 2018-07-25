@@ -52,10 +52,13 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.ifconfig',
               'sphinx.ext.autosummary',
               'sphinx.ext.mathjax',
+              'sphinx.ext.graphviz',
+              'sphinx.ext.inheritance_diagram',
               'math_dollar',  # has to go before numpydoc
               'numpydoc',
               'github',
-              'sphinx_gallery.gen_gallery'
+              'autoapi.extension',
+              # 'sphinx_gallery.gen_gallery'
               ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -69,6 +72,12 @@ source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'index'
+
+inheritance_graph_attrs = dict(rankdir="TB", size='""',
+                               fontsize=24, ratio='fill')
+
+autoapi_dirs = ['../neurolang']
+autoapi_ignore = ['test_*']
 
 # --- Sphinx Gallery ---
 sphinx_gallery_conf = {
