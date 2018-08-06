@@ -436,6 +436,10 @@ class NonConstant(Expression):
     """Any expression which is not a constant."""
 
 
+class Atom(Expression):
+    """Any expression that is not a composition."""
+
+
 class Definition(NonConstant):
     """
     Parent class for all composite operations.
@@ -444,7 +448,7 @@ class Definition(NonConstant):
     """
 
 
-class Symbol(NonConstant):
+class Symbol(NonConstant, Atom):
     """Symbol of a certain type."""
 
     def __init__(self, name):
@@ -465,7 +469,7 @@ class Symbol(NonConstant):
         return 'S{{{}: {}}}'.format(self.name, self.__type_repr__)
 
 
-class Constant(Expression):
+class Constant(Atom):
     def __init__(
         self, value,
         auto_infer_type=True,
