@@ -41,15 +41,14 @@ def expression_iterator(expression, include_level=False, dfs=True):
 
     while stack:
         current_element = pop()
-
         if isinstance(current_element[1], Symbol):
             children = []
         elif isinstance(current_element[1], Constant):
-            if is_subtype(Constant.type, typing.Tuple):
+            if is_subtype(current_element[1].type, typing.Tuple):
                 c = current_element[1].value
-                children = product((None,), c)
-            elif is_subtype(Constant.type, typing.AbstractSet):
-                children = product((None,), current_element[1].value)
+                children = product((None,), iter(c))
+            elif is_subtype(current_element[1].type, typing.AbstractSet):
+                children = product((None,), iter(current_element[1].value))
             else:
                 children = []
         elif isinstance(current_element[1], tuple):
@@ -74,7 +73,7 @@ def expression_iterator(expression, include_level=False, dfs=True):
             dfs and
             not (
                 isinstance(expression, Constant) and
-                is_subtype(expression, typing.AbstractSet)
+                is_subtype(expression.type, typing.AbstractSet)
             )
         ):
             try:

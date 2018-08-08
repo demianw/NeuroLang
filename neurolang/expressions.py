@@ -1,5 +1,4 @@
 """Expressions for the intermediate representation and auxiliary functions."""
-from itertools import chain
 import operator as op
 import typing
 import inspect
@@ -193,15 +192,13 @@ def type_validation_value(value, type_, symbol_table=None):
                 )))
             )
         elif issubclass(type_, typing.Tuple):
-            return (
-                issubclass(type(value), type_.__origin__) and
-                all((
-                    type_validation_value(
-                        v, t, symbol_table=symbol_table
-                    )
+            if len(value) == 0 and type_.__args__ is None:
+                return True
+            else:
+                return all(
+                    type_validation_value(v, t, symbol_table=symbol_table)
                     for v, t in zip(value, type_.__args__)
-                ))
-            )
+                )
         elif any(
             issubclass(type_, t)
             for t in (typing.AbstractSet, typing.Sequence, typing.Iterable)
@@ -218,7 +215,13 @@ def type_validation_value(value, type_, symbol_table=None):
         else:
             raise ValueError("Type %s not implemented in the checker" % type_)
     elif isinstance(value, FunctionApplication):
-        return is_subtype(value.type, type_.type)
+        return (
+            is_subtype(value.functor.type.__args__[-1], type_) and
+            is_subtype(
+                value.args.type,
+                typing.Tuple[value.functor.type.__args__[:-1]]
+            )
+        )
     else:
         return isinstance(
             value, type_
@@ -309,12 +312,19 @@ class ExpressionMeta(ParametricTypeClassMeta):
 
         @wraps(orig_init)
         def new_init(self, *args, **kwargs):
-            generic_pattern_match = any(
-                a is ... or (isinstance(a, tuple) and ... in a) or
-                (inspect.isclass(a) and issubclass(a, Expression))
-                for a in args
-            )
-            self.__is_pattern__ = generic_pattern_match
+            arguments = list(iter(args))
+            self.__is_pattern__ = False
+            while arguments and not self.__is_pattern__:
+                a = arguments.pop()
+                if isinstance(a, tuple):
+                    arguments.extend(a)
+                elif a is ...:
+                    self.__is_pattern__ = True
+                elif (inspect.isclass(a) and issubclass(a, Expression)):
+                    self.__is_pattern__ = True
+                elif isinstance(a, Expression):
+                    arguments.extend(getattr(a, c) for c in a.__children__)
+
             self._symbols = set()
 
             if self.__no_explicit_type__:
@@ -353,7 +363,7 @@ class Expression(metaclass=ExpressionMeta):
             variable_type = ToBeInferred
 
         return FunctionApplication[variable_type](
-            self, args, kwargs,
+            self, args
          )
 
     def __getattr__(self, attr):
@@ -374,7 +384,9 @@ class Expression(metaclass=ExpressionMeta):
             Constant[typing.Callable[[self.type, str], ToBeInferred]](
                 getattr,
             ),
-            args=(self, Constant[str](attr))
+            args=Constant[typing.Tuple[self.type, str]](
+                (self, Constant[str](attr))
+            )
         )
 
     def change_type(self, type_):
@@ -502,6 +514,25 @@ class Constant(Expression):
         if auto_infer_type and self.type is not ToBeInferred:
             self.change_type(self.type)
 
+    def __iter_(self):
+        if is_subtype(self.type, typing.Tuple):
+            return iter(self.value)
+        else:
+            super().__iter__(self)
+
+    def __getitem__(self, item):
+        if (
+            is_subtype(self.type, typing.Tuple) and (
+                not isinstance(item, Expression) or
+                isinstance(item, Constant)
+            )
+        ):
+            if isinstance(item, Constant):
+                item = item.value
+            return self.value[item]
+        else:
+            super().__getitem__(self, item)
+
     def __verify_type__(self, value, type_):
         return (
             isinstance(
@@ -541,6 +572,8 @@ class Constant(Expression):
     def __repr__(self):
         if self.value is ...:
             value_str = '...'
+        elif isinstance(self.value, Expression):
+            value_str = repr(self.value)
         elif callable(self.value):
             value_str = self.value.__qualname__
         else:
@@ -558,11 +591,10 @@ class Constant(Expression):
 
 class FunctionApplication(Definition):
     def __init__(
-        self, functor, args, kwargs=None,
+        self, functor, args
     ):
         self.functor = functor
         self.args = args
-        self.kwargs = kwargs
 
         if self.type in (ToBeInferred, typing.Any):
             if self.functor.type in (ToBeInferred, typing.Any):
@@ -587,19 +619,19 @@ class FunctionApplication(Definition):
         else:
             self._symbols = set()
 
-        if self.kwargs is None:
-            self.kwargs = dict()
-
         if self.args is None:
-            self.args = tuple()
-        elif not isinstance(self.args, tuple):
+            self.args = Constant[typing.Tuple[None]](tuple())
+        elif (
+            isinstance(self.args, Expression) and
+            is_subtype(self.args.type, typing.Tuple)
+        ):
+            pass
+        elif isinstance(self.args, tuple):
+            self.args = Constant(self.args)
+        else:
             raise ValueError('args parameter must be a tuple')
 
-        for arg in chain(self.args, self.kwargs.values()):
-            if isinstance(arg, Symbol):
-                self._symbols.add(arg)
-            elif isinstance(arg, Expression):
-                self._symbols |= arg._symbols
+        self._symbols |= self.args._symbols
 
     @property
     def function(self):
@@ -624,6 +656,9 @@ class Projection(Definition):
         self, collection, item,
         auto_infer_projection_type=True
     ):
+        if not isinstance(item, Expression):
+            item = Constant(item)
+
         if self.type is ToBeInferred and auto_infer_projection_type:
             if collection.type is not ToBeInferred:
                 if is_subtype(collection.type, typing.Tuple):
