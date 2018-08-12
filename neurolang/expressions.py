@@ -332,19 +332,6 @@ class Expression(metaclass=ExpressionMeta):
 class ExpressionBlock(Expression):
     def __init__(self, expressions):
         self.expressions = expressions
-        self._symbols = set()
-        for exp in expressions:
-            self._symbols |= exp._symbols
-
-    def __repr__(self):
-        return 'BLOCK START\n' + '\n    '.join(
-            repr(e) for e in self.expressions
-        ) + '\nBLOCK END'
-
-
-class ExpressionBlock(Expression):
-    def __init__(self, expressions):
-        self.expressions = expressions
 
     def __repr__(self):
         return '\\n'.join(
