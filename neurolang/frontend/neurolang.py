@@ -11,10 +11,10 @@ from .ast_tatsu import TatsuASTConverter
 from ..exceptions import NeuroLangException
 from ..expressions import (
     Symbol, Constant, Expression, FunctionApplication, Statement, Query,
-    Projection, ExistentialPredicate, ExpressionBlock, Lambda,
-    unify_types, Unknown,
-    NeuroLangTypeException, is_leq_informative,
-    infer_type
+    Projection, ExistentialPredicate, ExpressionBlock,
+    unify_types, ToBeInferred,
+    NeuroLangTypeException, is_subtype,
+    get_type_and_value
 )
 
 
