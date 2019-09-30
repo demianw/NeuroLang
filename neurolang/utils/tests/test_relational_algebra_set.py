@@ -30,6 +30,18 @@ def test_relational_algebra_set_semantics():
     assert all(a_ in ras for a_ in a if a_ != 5)
 
 
+def test_relational_algebra_sequece_semantics():
+    a = [5, 4, 3, 2, 3, 1]
+    ras = RelationalAlgebraSet(a)
+
+    assert len(ras) == len(a) - 1
+    assert ras[0] == (5,)
+
+    assert (
+        set(ras[i] for i in range(5)) == set((i,) for i in a)
+    )
+
+
 def test_relational_algebra_ra_projection():
     a = [(i % 2, i, i * 2) for i in range(5)]
     ras = RelationalAlgebraSet(a)

@@ -1,11 +1,11 @@
-from collections.abc import MutableSet, Set
+from collections import MutableSet, Set, Sequence
 from typing import Iterable
 from uuid import uuid1
 
 import pandas as pd
 
 
-class RelationalAlgebraFrozenSet(Set):
+class RelationalAlgebraFrozenSet(Sequence, Set):
     def __init__(self, iterable=None):
         self._container = None
         if iterable is not None:
@@ -23,6 +23,9 @@ class RelationalAlgebraFrozenSet(Set):
             len(self) > 0 and
             hash(element) in self._container.index
         )
+
+    def __getitem__(self, index):
+        return tuple(self._container.values[index])
 
     @staticmethod
     def _normalise_element(element):
