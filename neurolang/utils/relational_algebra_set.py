@@ -1,11 +1,18 @@
-from collections import MutableSet, Set, Sequence
+from collections.abc import MutableSet, Set, Sequence
+from abc import abstractproperty
 from typing import Iterable
 from uuid import uuid1
 
 import pandas as pd
 
 
-class RelationalAlgebraFrozenSet(Sequence, Set):
+class ArrayInterface:
+    @abstractproperty
+    def asarray(self):
+        raise NotImplementedError()
+
+
+class RelationalAlgebraFrozenSet(Sequence, Set, ArrayInterface):
     def __init__(self, iterable=None):
         self._container = None
         if iterable is not None:
@@ -203,6 +210,10 @@ class RelationalAlgebraFrozenSet(Sequence, Set):
         if len(self) == 0:
             raise StopIteration
         return iter(self._container.values.squeeze())
+
+    @property
+    def asarray(self):
+        return self._container.values
 
 
 class NamedRelationalAlgebraFrozenSet(RelationalAlgebraFrozenSet):

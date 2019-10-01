@@ -26,7 +26,7 @@ from . import (Disjunction, Implication, chase, extract_datalog_free_variables,
 class AggregationApplication(FunctionApplication):
     def __repr__(self):
         r = u'\u03BB{{<{}>: {}}}'.format(self.functor, self.__type_repr__)
-        if self.args is ...:
+        if self.args is Ellipsis:
             r += '(...)'
         elif self.args is not None:
             r += (
