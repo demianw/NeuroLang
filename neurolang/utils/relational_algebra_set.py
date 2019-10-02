@@ -17,11 +17,12 @@ class RelationalAlgebraFrozenSet(Sequence, Set, ArrayInterface):
         self._container = None
         if iterable is not None:
             if isinstance(iterable, RelationalAlgebraFrozenSet):
-                self._container = iterable._container
+                self._container = iterable._container.copy()
+            elif isinstance(iterable, pd.DataFrame):
+                self._container = iterable.copy()
+                self._container = self._renew_index(self._container)
             else:
-                self._container = pd.DataFrame(
-                    list(iterable),
-                )
+                self._container = pd.DataFrame(iterable)
                 self._container = self._renew_index(self._container)
 
     def __contains__(self, element):

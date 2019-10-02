@@ -1,13 +1,15 @@
-from typing import (AbstractSet, Any, Callable, Generic, Mapping, Sequence,
-                    Set, SupportsInt, T, Tuple, Union)
-
 import pytest
 
-from ...utils import OrderedSet
-from .. import (NeuroLangTypeException, SequenceSet, Unknown, get_args,
-                get_origin, infer_type, is_leq_informative, is_parameterized,
-                is_parametrical, replace_type_variable,
-                typing_callable_from_annotated_function)
+from typing import (
+    Union, Set, Callable, AbstractSet, Generic, Tuple, T, SupportsInt,
+    Any, Mapping
+)
+from .. import (
+    Unknown, is_leq_informative,
+    typing_callable_from_annotated_function, get_args, get_origin,
+    replace_type_variable, is_parameterized, is_parametrical,
+    infer_type, NeuroLangTypeException
+)
 
 
 def test_parametrical():
@@ -88,9 +90,6 @@ def test_is_leq_informative_base_types():
         AbstractSet[int], AbstractSet[float]
     )
 
-    #assert is_leq_informative(SequenceSet[int], AbstractSet[int])
-    assert is_leq_informative(SequenceSet[int], Sequence[int])
-
     with pytest.raises(ValueError, match="Generic not supported"):
         assert is_leq_informative(
             Set[int], Generic[T]
@@ -155,10 +154,9 @@ def test_infer_type():
     assert infer_type(frozenset([1])) is AbstractSet[int]
     assert infer_type(frozenset([1, 3.]), deep=True) is AbstractSet[float]
     assert infer_type(frozenset([1, 3]), deep=True) is AbstractSet[int]
-    assert infer_type(OrderedSet([1]), deep=True) is SequenceSet[int]
-    assert infer_type([1], deep=True) is Sequence[int]
     with pytest.raises(NeuroLangTypeException):
         infer_type(frozenset([1, 'a']), deep=True)
 
     assert infer_type(dict()) is Mapping[Unknown, Unknown]
     assert infer_type(dict(a=2)) is Mapping[str, int]
+

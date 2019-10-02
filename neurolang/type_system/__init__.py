@@ -8,7 +8,7 @@ import inspect
 import types
 from typing import (
     Callable, Tuple, Set, AbstractSet, Mapping, TypeVar,
-    Iterable, Sequence, Any, Generic, Text, T_co
+    Iterable, Sequence, Any, Generic, Text
 )
 import sys
 from itertools import islice
@@ -90,10 +90,6 @@ type_order = {
     float: (np.float64, complex,),
     Set: (AbstractSet,)
 }
-
-
-class SequenceSet(AbstractSet, Sequence, Generic[T_co]):
-    _special = True
 
 
 def is_consistent(type1, type2):
@@ -307,13 +303,9 @@ def infer_type_iterables(value, deep=True, recursive_callback=infer_type):
         inner_type = unify_types(
             recursive_callback(element), inner_type
         )
-    is_abstract_set = isinstance(value, AbstractSet)
-    is_sequence = isinstance(value, Sequence)
-    if is_abstract_set and is_sequence:
-        return SequenceSet[inner_type]
-    if is_abstract_set:
+    if isinstance(value, AbstractSet):
         return AbstractSet[inner_type]
-    elif is_sequence:
+    elif isinstance(value, Sequence):
         return Sequence[inner_type]
 
 

@@ -75,3 +75,6 @@ class WrappedRelationalAlgebraSet(
             self._container is not None and
             hash(element) in self._container.index
         )
+
+    def unwrap(self):
+        return RelationalAlgebraSet(self)
