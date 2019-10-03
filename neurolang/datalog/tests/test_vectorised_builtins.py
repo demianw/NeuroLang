@@ -1,6 +1,4 @@
-import operator as op
-from itertools import product
-from typing import AbstractSet, Callable, Sequence, Tuple
+from typing import AbstractSet, Callable, Tuple
 
 import numpy as np
 from pytest import raises
@@ -8,13 +6,12 @@ from pytest import raises
 from ... import expression_walker as ew
 from ... import expressions
 from ...expressions import Constant, Expression, FunctionApplication, Symbol
-from ...type_system import is_leq_informative, get_args
+from ...type_system import get_args, is_leq_informative
 from ...utils import RelationalAlgebraFrozenSet
 from ..basic_representation import DatalogProgram
-from ..chase import (ChaseGeneral, ChaseMGUMixin, ChaseNaive,
-                     ChaseNamedRelationalAlgebraMixin, ChaseNode,
-                     ChaseRelationalAlgebraPlusCeriMixin, ChaseSemiNaive)
-from ..expressions import Disjunction, Fact, Implication, TranslateToLogic
+from ..chase import (ChaseGeneral, ChaseNamedRelationalAlgebraMixin,
+                     ChaseSemiNaive)
+from ..expressions import Disjunction, Fact, Implication
 from ..wrapped_collections import WrappedRelationalAlgebraSet
 
 C_ = expressions.Constant
