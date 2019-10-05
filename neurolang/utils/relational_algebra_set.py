@@ -43,6 +43,13 @@ class RelationalAlgebraFrozenSet(Sequence, Set, ArrayInterface):
         )[0]
 
     @staticmethod
+    def _hash_element(element):
+        return pd.util.hash_pandas_object(
+            pd.DataFrame([element]),
+            index=False
+        )[0]
+
+    @staticmethod
     def _normalise_element(element):
         if isinstance(element, tuple):
             pass
