@@ -2,11 +2,12 @@ from operator import and_, invert, or_
 from typing import Any
 
 from ..exceptions import NeuroLangException
-from ..expression_walker import PatternWalker, add_match
+from ..expression_walker import PatternWalker, ReplaceSymbolWalker, add_match
 from ..expressions import Constant, FunctionApplication, Symbol
 from ..utils import OrderedSet
-from . import (FALSE, TRUE, Conjunction, Disjunction, Implication, Negation,
-               Quantifier, Union, LogicOperator)
+from . import (FALSE, TRUE, Conjunction, Disjunction, ExistentialPredicate,
+               Implication, LogicOperator, Negation, Quantifier, Union,
+               UniversalPredicate)
 
 
 class LogicSolver(PatternWalker):
@@ -268,3 +269,149 @@ def extract_logic_predicates(expression):
     """
     edp = ExtractLogicPredicates()
     return edp.walk(expression)
+
+
+class FlattenConjunctionDisjunctionWalker(PatternWalker):
+    @add_match(
+        Disjunction,
+        lambda e: any(isinstance(f, Disjunction) for f in e.formulas)
+    )
+    def flatten_disjunction(self, expression):
+        formulas = tuple()
+        for f in expression.formulas:
+            f = self.walk(f)
+            if isinstance(f, Disjunction):
+                formulas += f.formulas
+            else:
+                formulas += (f,)
+
+        return self.walk(Disjunction(formulas))
+
+    @add_match(
+        Conjunction,
+        lambda e: any(isinstance(f, Conjunction) for f in e.formulas)
+    )
+    def flatten_conjunction(self, expression):
+        formulas = tuple()
+        for f in expression.formulas:
+            f = self.walk(f)
+            if isinstance(f, Conjunction):
+                formulas += f.formulas
+            else:
+                formulas += (f,)
+
+        return self.walk(Conjunction(formulas))
+
+
+class FreshQuantifiers(PatternWalker):
+    @add_match(Quantifier)
+    def quantifier(self, expression):
+        fresh = expression.head.fresh()
+        rsw = ReplaceSymbolWalker({expression.head: fresh})
+        return expression.apply(
+            fresh,
+            self.walk(rsw(expression.body))
+        )
+
+
+class PushNegationWalker(PatternWalker):
+    @add_match(Negation(Negation))
+    def double_negation(self, expression):
+        return self.walk(expression.formula.formula)
+
+    @add_match(Negation(Conjunction))
+    def negation_conjunction(self, expression):
+        return self.walk(self.disjunction(
+            tuple(Negation(f) for f in expression.formulas)
+        ))
+
+    @add_match(Negation(Disjunction))
+    def negation_disjunction(self, expression):
+        return self.walk(self.conjunction(
+            tuple(Negation(f) for f in expression.formulas)
+        ))
+
+
+class PrenexNormalFormWalker(PatternWalker):
+    @add_match(Quantifier)
+    def quantifier(self, expression):
+        body = expression.body
+        walked_body = self.walk(body)
+        if body is not walked_body:
+            return self.walk(expression.apply(expression.head, walked_body))
+
+    @add_match(
+        Conjunction,
+        lambda e: any(isinstance(f, Quantifier) for f in e.formulas)
+    )
+    def conjunction(self, expression):
+        formulas, universals, existentials = \
+            self.push_quantifiers_out(expression.formulas)
+
+        expression = Conjunction(formulas)
+        expression = self.assemble_quantifiers(
+            universals, expression, existentials
+        )
+
+        return self.walk(expression)
+
+    @add_match(
+        Disjunction,
+        lambda e: any(isinstance(f, Quantifier) for f in e.formulas)
+    )
+    def disjunction(self, expression):
+        formulas, universals, existentials = \
+            self.push_quantifiers_out(expression.formulas)
+
+        expression = Disjunction(formulas)
+        expression = self.assemble_quantifiers(
+            universals, expression, existentials
+        )
+
+        return self.walk(expression)
+
+    @add_match(
+        Negation,
+        lambda e: isinstance(e.formula, Quantifier)
+    )
+    def negation(self, expression):
+        formulas, universals, existentials = \
+            self.push_quantifiers_out([expression.formula])
+
+        expression = Negation(formulas[0])
+        expression = self.assemble_quantifiers(
+            universals, expression, existentials
+        )
+
+        return self.walk(expression)
+
+    def assemble_quantifiers(self, universals, expression, existentials):
+        for quantified_variable in universals:
+            expression = UniversalPredicate(quantified_variable, expression)
+        for quantified_variable in existentials:
+            expression = ExistentialPredicate(existentials)
+        return expression
+
+    def push_quantifiers_out(self, formulas_in):
+        existentials = []
+        universals = []
+        formulas = tuple()
+        for current_formula in formulas_in:
+            f = current_formula
+            while isinstance(f, Quantifier):
+                quantified_variable = f.head
+                body = f.body
+                if not quantified_variable.is_fresh:
+                    fresh = quantified_variable.fresh()
+                    body = (
+                        ReplaceSymbolWalker({quantified_variable: fresh})
+                        .walk(body)
+                    )
+                    quantified_variable = fresh
+                if isinstance(f, ExistentialPredicate):
+                    existentials.append(quantified_variable)
+                elif isinstance(f, UniversalPredicate):
+                    universals.append(quantified_variable)
+                f = body
+            formulas += (f,)
+        return formulas, universals, existentials
