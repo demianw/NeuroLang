@@ -238,6 +238,30 @@ def test_reachable():
     assert set(reached.formulas) == set(code.formulas[:-1])
 
 
+def test_reachable_with_builtin():
+    Q = S_('Q')  # noqa: N806
+    R = S_('R')  # noqa: N806
+    S = S_('S')  # noqa: N806
+    T = S_('T')  # noqa: N806
+    x = S_('x')
+    y = S_('y')
+    eq_ = C_(eq)
+
+    code = DT.walk(B_([
+        Imp_(R(x, y), Q(x, y) & eq_(x, y)),
+        Imp_(R(x, y), Q(y, x)),
+        Imp_(S(x), R(x, y) & S(y)),
+        Imp_(T(x), Q(x, y)),
+    ]))
+
+    datalog = Datalog()
+    datalog.walk(code)
+
+    reached = reachable_code(code.formulas[-2], datalog)
+
+    assert set(reached.formulas) == set(code.formulas[:-1])
+
+
 def test_implication_has_existential_variable_in_antecedent():
     Q = S_('Q')
     R = S_('R')

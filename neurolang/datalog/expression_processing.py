@@ -228,7 +228,9 @@ def stratify_obtain_new_stratum(to_process, seen):
     return new_seen, new_to_process, stratum
 
 
-def reachable_code(query, datalog):
+def reachable_code(
+    query, datalog, extract_predicate_function=extract_logic_predicates
+):
     """Produces the code reachable by a query
 
     Parameters
@@ -237,6 +239,9 @@ def reachable_code(query, datalog):
         Rule to figure out the reachable program from
     datalog : DatalogProgram
         datalog instance containing the EDB and IDB.
+    extract_predicate_function: function
+        Function receiving a Datalog expression and
+        returning and `OrderedSet` of it's predicate symbols.
 
     Returns
     -------
@@ -248,7 +253,9 @@ def reachable_code(query, datalog):
 
     reachable_code = []
     idb = datalog.intensional_database()
-    to_reach = [q.consequent.functor for q in query]
+    to_reach = []
+    for q in query:
+        to_reach += [p.functor for p in extract_logic_predicates(q.consequent)]
     reached = set()
     seen_rules = set()
     while to_reach:
