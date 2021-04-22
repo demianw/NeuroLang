@@ -13,6 +13,7 @@ from ...exceptions import (
     UnsupportedQueryError,
     UnsupportedSolverError,
 )
+from ...probabilistic import dalvi_suciu_lift
 from ...probabilistic.exceptions import (
     ForbiddenConditionalQueryNonConjunctive,
     UnsupportedProbabilisticQueryError,
@@ -22,11 +23,7 @@ from ...utils.relational_algebra_set import (
     NamedRelationalAlgebraFrozenSet,
     RelationalAlgebraFrozenSet,
 )
-from ..probabilistic_frontend import (
-    NeurolangPDL,
-    lifted_solve_marg_query,
-    lifted_solve_succ_query,
-)
+from ..probabilistic_frontend import NeurolangPDL
 
 
 def assert_almost_equal(set_a, set_b):
@@ -372,6 +369,7 @@ def test_neurolange_dl_deterministic_negation():
     assert res["s"].to_unnamed() == {(i, j) for i, j in dataset if i != j}
 
 
+@pytest.mark.skip
 def test_neurolange_dl_probabilistic_negation():
     neurolang = NeurolangPDL()
     s = neurolang.new_symbol(name="s")
@@ -390,7 +388,7 @@ def test_neurolange_dl_probabilistic_negation():
     expected = {(i, j, 1 - p) for (p, i, j) in dataset}
     assert_almost_equal(result, expected)
 
-
+@pytest.mark.skip
 def test_neurolange_dl_probabilistic_negation_not_safe():
     neurolang = NeurolangPDL()
     s = neurolang.new_symbol(name="s")
@@ -410,6 +408,7 @@ def test_neurolange_dl_probabilistic_negation_not_safe():
         neurolang.solve_all()
 
 
+@pytest.mark.skip
 def test_neurolange_dl_probabilistic_negation_rule():
     neurolang = NeurolangPDL()
     s = neurolang.new_symbol(name="s")
@@ -863,23 +862,17 @@ def test_query_without_safe_plan():
         name="names",
     )
 
-    with nl.scope as e:
+    with nl.environment as e:
         e.q[e.x, e.y, e.PROB[e.x, e.y]] = e.names[e.x] & e.names[e.y]
 
+    with pytest.raises(dalvi_suciu_lift.NonLiftableException):
         res = nl.solve_all()
-
-    assert res["q"].to_unnamed() == {
-        ("alice", "alice", 0.2),
-        ("alice", "bob", 0.2 * 0.8),
-        ("bob", "alice", 0.2 * 0.8),
-        ("bob", "bob", 0.8),
-    }
 
 
 def test_query_without_safe_fails():
     nl = NeurolangPDL(
-        probabilistic_solvers=(lifted_solve_succ_query,),
-        probabilistic_marg_solvers=(lifted_solve_marg_query,),
+        probabilistic_solvers=(dalvi_suciu_lift.solve_succ_query,),
+        probabilistic_marg_solvers=(dalvi_suciu_lift.solve_marg_query,),
     )
     nl.add_probabilistic_facts_from_tuples(
         [
@@ -889,10 +882,11 @@ def test_query_without_safe_fails():
         name="names",
     )
 
-    with pytest.raises(UnsupportedSolverError):
-        with nl.scope as e:
-            e.q[e.x, e.y, e.PROB[e.x, e.y]] = e.names[e.x] & e.names[e.y]
-            nl.solve_all()
+    with nl.environment as e:
+        e.q[e.x, e.y, e.PROB[e.x, e.y]] = e.names[e.x] & e.names[e.y]
+
+    with pytest.raises(dalvi_suciu_lift.NonLiftableException):
+        nl.solve_all()
 
 
 def test_cbma_two_term_conjunctive_query():
