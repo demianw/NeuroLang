@@ -649,11 +649,9 @@ def symbol_co_occurence_graph(expression):
     """
     c_matrix = np.zeros((len(expression.formulas),) * 2)
     for i, formula in enumerate(expression.formulas):
-        atom_symbols = set(a.functor for a in extract_logic_atoms(formula))
+        atom_symbols = {a.functor for a in extract_logic_atoms(formula)}
         for j, formula_ in enumerate(expression.formulas[i + 1:]):
-            atom_symbols_ = set(
-                a.functor for a in extract_logic_atoms(formula_)
-            )
+            atom_symbols_ = {a.functor for a in extract_logic_atoms(formula_)}
             if not atom_symbols.isdisjoint(atom_symbols_):
                 c_matrix[i, i + 1 + j] = 1
                 c_matrix[i + 1 + j, i] = 1
@@ -682,13 +680,11 @@ def args_co_occurence_graph(expression, variable_to_use=None):
 
     c_matrix = np.zeros((len(expression.formulas),) * 2)
     for i, formula in enumerate(expression.formulas):
-        f_args = set(b for a in extract_logic_atoms(formula) for b in a.args)
+        f_args = {b for a in extract_logic_atoms(formula) for b in a.args}
         if variable_to_use is not None:
             f_args &= variable_to_use
         for j, formula_ in enumerate(expression.formulas[i + 1:]):
-            f_args_ = set(
-                b for a in extract_logic_atoms(formula_) for b in a.args
-            )
+            f_args_ = {b for a in extract_logic_atoms(formula_) for b in a.args}
             if variable_to_use is not None:
                 f_args_ &= variable_to_use
             if not f_args.isdisjoint(f_args_):
@@ -767,13 +763,13 @@ def disjoint_project_conjunctive_query(conjunctive_query, symbol_table):
 
     """
     free_variables = extract_logic_free_variables(conjunctive_query)
-    atoms_with_constants_in_all_key_positions = set(
+    atoms_with_constants_in_all_key_positions = {
         atom
         for atom in extract_logic_atoms(conjunctive_query)
         if is_probabilistic_atom_with_constants_in_all_key_positions(
             atom, symbol_table
         )
-    )
+    }
     if not atoms_with_constants_in_all_key_positions:
         return False, None
     nonkey_variables = set.union(
@@ -1233,11 +1229,7 @@ def _formulas_weights(formula_powerset):
                         {c1} | formula_containments[i1] - {c0}
                     )
 
-    fcs = {
-        formula: containment
-        for formula, containment in
-        zip(formula_powerset, formula_containments)
-    }
+    fcs = dict(zip(formula_powerset, formula_containments))
     formulas_weights = mobius_weights(fcs)
     return formulas_weights
 
@@ -1253,7 +1245,7 @@ def mobius_weights(formula_containments):
 
 def mobius_function(formula, formula_containments, known_weights=None):
     if known_weights is None:
-        known_weights = dict()
+        known_weights = {}
     if formula in known_weights:
         return known_weights[formula]
     res = -1
