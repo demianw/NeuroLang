@@ -1,5 +1,4 @@
-"""
-Pytest configuration file.
+"""Pytest configuration file.
 
 NOTE: Do not remove the unused dask_sql import !
 
@@ -8,6 +7,7 @@ from python. This JVM needs to be started before we import neurolang,
 otherwise it can cause major side-effects which are hard to track. See
 https://github.com/jpype-project/jpype/issues/933 for reference.
 """
+
 import warnings
 from typing import Any, Generator
 
@@ -51,9 +51,7 @@ def pytest_collection_modifyitems(config: Any, items: Any) -> None:
 
 
 def pytest_sessionstart(session: pytest.Session) -> None:
-    """
-    Hook called after the pytest Session object has been created and
-    before performing collection and entering the run test loop.
+    """Ensure pytest session is properly configured before running tests.
 
     The dask-sql library uses the jpype library which starts a JVM and allows
     us to use Java classes from Python. But the JVM will trigger a
@@ -74,11 +72,7 @@ def pytest_sessionstart(session: pytest.Session) -> None:
 
 @pytest.fixture(autouse=config["RAS"].get("backend", "pandas") == "dask")
 def clear_dask_context_after_test_module() -> Generator[int, None, None]:
-    """
-    We use only one DaskContextManager for the application and its context gets
-    clustered with objects quite fast when running the tests, so this fixture clears
-    the context after each test function.
-    """
+    """Clear Dask context after each test module to prevent clustering issues."""
     yield 0
 
     DaskContextManager._context = None
@@ -86,12 +80,10 @@ def clear_dask_context_after_test_module() -> Generator[int, None, None]:
 
 @pytest.fixture(autouse=True)
 def clear_probabilistic_caches() -> Generator[None, None, None]:
-    """
-    Clear probabilistic resolution caches before each test.
+    """Clear probabilistic resolution caches before each test.
 
     This avoids stale state across test boundaries.
     """
-
     dalvi_suciu_lift.clear_cache()
     containment.clear_cache()
     yield

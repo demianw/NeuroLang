@@ -1,3 +1,5 @@
+"""Tests for gradual typing functionality."""
+
 import operator as op
 from typing import (AbstractSet, Any, Callable, Generic, Mapping, Set,
                     SupportsInt, T, Tuple, Union)
@@ -174,15 +176,13 @@ def test_infer_type():
 
 
 def test_is_leq_informative_callable_ellipsis():
-    """
-    Regression test: `Callable[..., T]` uses `...` (Ellipsis) as a type
-    parameter meaning "any/unknown arguments". `is_leq_informative` must not
-    raise ValueError and must treat `...` as the least-informative arg-spec,
-    analogous to `Unknown` for ordinary types.
+    """Regression test: `Callable[..., T]` uses `...` (Ellipsis) as a type parameter meaning "any/unknown arguments"."""
+    # `is_leq_informative` must not raise ValueError and must treat `...` as the least-informative arg-spec,
+    # analogous to `Unknown` for ordinary types.
+    #
+    # `Callable[..., T] ≤ Callable[anything, T]` regardless of arity, because
+    # unknown args are less informative than any concrete argument spec.
 
-    `Callable[..., T] ≤ Callable[anything, T]` regardless of arity, because
-    unknown args are less informative than any concrete argument spec.
-    """
     # Callable[..., T] is less informative than any same-return-type Callable
     assert is_leq_informative(Callable[..., bool], Callable[[int], bool])
     assert is_leq_informative(Callable[..., bool], Callable[[int, str], bool])

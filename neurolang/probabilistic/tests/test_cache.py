@@ -1,3 +1,5 @@
+"""Tests for caching functionality in probabilistic resolution."""
+
 import unittest
 from typing import AbstractSet
 from unittest.mock import patch
