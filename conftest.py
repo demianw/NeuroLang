@@ -11,6 +11,7 @@ https://github.com/jpype-project/jpype/issues/933 for reference.
 import warnings
 
 import pytest
+from neurolang.probabilistic import containment, dalvi_suciu_lift
 
 try:
     import dask_sql
@@ -81,11 +82,11 @@ def clear_dask_context_after_test_module():
 
 @pytest.fixture(autouse=True)
 def clear_probabilistic_caches():
-    """Clear probabilistic resolution caches before each test.
-    
+    """
+    Clear probabilistic resolution caches before each test.
+
     This avoids stale state across test boundaries.
     """
-    from neurolang.probabilistic import containment, dalvi_suciu_lift
 
     dalvi_suciu_lift.clear_cache()
     containment.clear_cache()
