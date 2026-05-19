@@ -15,13 +15,15 @@ import pytest
 from neurolang.probabilistic import containment, dalvi_suciu_lift
 
 try:
-    import dask_sql
-
-    from neurolang.utils.relational_algebra_set.dask_helpers import (
-        DaskContextManager,
-    )
-
-    HAS_DASK: bool = True
+    import importlib.util
+    dask_sql_spec = importlib.util.find_spec("dask_sql")
+    if dask_sql_spec is not None:
+        from neurolang.utils.relational_algebra_set.dask_helpers import (
+            DaskContextManager,
+        )
+        HAS_DASK: bool = True
+    else:
+        HAS_DASK: bool = False
 except ImportError:
     HAS_DASK: bool = False
 from neurolang import config

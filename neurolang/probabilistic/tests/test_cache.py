@@ -2,7 +2,6 @@
 
 import unittest
 from typing import AbstractSet
-from unittest.mock import patch
 
 from ...expressions import Constant, Symbol
 from ...logic import Conjunction
