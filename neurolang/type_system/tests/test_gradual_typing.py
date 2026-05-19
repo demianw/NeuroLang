@@ -11,6 +11,7 @@ from .. import (NeuroLangTypeException, Unknown, get_args, get_origin,
 
 
 def test_parametrical():
+    """Test if types are parametrical."""
     assert is_parametrical(Set)
     assert is_parametrical(AbstractSet)
     assert is_parametrical(Union)
@@ -25,6 +26,7 @@ def test_parametrical():
 
 
 def test_parameterized():
+    """Test if types are parameterized."""
     assert not is_parameterized(Set)
     assert not is_parameterized(AbstractSet)
     assert not is_parameterized(Union)
@@ -39,6 +41,7 @@ def test_parameterized():
 
 
 def test_get_type_args():
+    """Test getting type arguments."""
     args = get_args(AbstractSet)
     assert args == tuple()
 
@@ -47,6 +50,7 @@ def test_get_type_args():
 
 
 def test_is_leq_informative_type():
+    """Test if one type is less informative than another."""
     assert is_leq_informative(Unknown, int)
     assert not is_leq_informative(int, Unknown)
     assert not is_leq_informative(Any, int)
@@ -65,6 +69,7 @@ def test_is_leq_informative_type():
 
 
 def test_is_leq_informative_base_types():
+    """Test is_leq_informative with base types."""
     assert is_leq_informative(int, int)
     assert is_leq_informative(int, float)
     assert is_leq_informative(str, str)
@@ -95,6 +100,7 @@ def test_is_leq_informative_base_types():
 
 
 def test_typing_callable_from_annotated_function():
+    """Test creating typing callable from annotated function."""
     def fun(a: int, b: str) -> float:
         pass
 
@@ -108,6 +114,7 @@ def test_typing_callable_from_annotated_function():
 
 
 def test_replace_subtype():
+    """Test replacing subtype in type variables."""
     assert (
         Set is replace_type_variable(
             int, Set, T
@@ -139,6 +146,7 @@ def test_replace_subtype():
 
 
 def test_infer_type():
+    """Test type inference."""
 
     def a(x: int, y: str) -> bool:
         return False
