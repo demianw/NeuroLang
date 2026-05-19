@@ -9,6 +9,7 @@ otherwise it can cause major side-effects which are hard to track. See
 https://github.com/jpype-project/jpype/issues/933 for reference.
 """
 import warnings
+from typing import Any, Generator
 
 import pytest
 from neurolang.probabilistic import containment, dalvi_suciu_lift
@@ -20,25 +21,25 @@ try:
         DaskContextManager,
     )
 
-    HAS_DASK = True
+    HAS_DASK: bool = True
 except ImportError:
-    HAS_DASK = False
+    HAS_DASK: bool = False
 from neurolang import config
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: Any) -> None:
     """Add custom command line options."""
     parser.addoption(
         "--runslow", action="store_true", default=False, help="run slow tests"
     )
 
 
-def pytest_configure(config):
+def pytest_configure(config: Any) -> None:
     """Configure pytest with custom markers."""
     config.addinivalue_line("markers", "slow: mark test as slow to run")
 
 
-def pytest_collection_modifyitems(config, items):
+def pytest_collection_modifyitems(config: Any, items: Any) -> None:
     """Modify test collection to skip slow tests unless --runslow is given."""
     if config.getoption("--runslow"):
         # --runslow given in cli: do not skip slow tests
@@ -49,7 +50,7 @@ def pytest_collection_modifyitems(config, items):
             item.add_marker(skip_slow)
 
 
-def pytest_sessionstart(session: pytest.Session):
+def pytest_sessionstart(session: pytest.Session) -> None:
     """
     Hook called after the pytest Session object has been created and
     before performing collection and entering the run test loop.
@@ -72,7 +73,7 @@ def pytest_sessionstart(session: pytest.Session):
 
 
 @pytest.fixture(autouse=config["RAS"].get("backend", "pandas") == "dask")
-def clear_dask_context_after_test_module():
+def clear_dask_context_after_test_module() -> Generator[int, None, None]:
     """
     We use only one DaskContextManager for the application and its context gets
     clustered with objects quite fast when running the tests, so this fixture clears
@@ -84,7 +85,7 @@ def clear_dask_context_after_test_module():
 
 
 @pytest.fixture(autouse=True)
-def clear_probabilistic_caches():
+def clear_probabilistic_caches() -> Generator[None, None, None]:
     """
     Clear probabilistic resolution caches before each test.
 
