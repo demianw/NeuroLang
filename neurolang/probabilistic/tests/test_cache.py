@@ -10,6 +10,8 @@ from ..probabilistic_ra_utils import ProbabilisticFactSet
 
 
 class TestProbabilisticCache(unittest.TestCase):
+    """Test suite for probabilistic caching functionality."""
+
     def setUp(self):
         """Clear caches before each test."""
         containment.clear_cache()
