@@ -27,11 +27,11 @@ import numpy as np
 from nibabel.dataobj_images import DataobjImage
 
 from .. import expressions as ir
-from ..region_solver import Region
-from ..regions import ExplicitVBR, ImplicitVBR, SphericalVolume
+from ..neuroimaging.region_solver import Region
+from ..neuroimaging.regions import ExplicitVBR, ImplicitVBR, SphericalVolume
 from ..type_system import Unknown, is_leq_informative
 from ..typed_symbol_table import TypedSymbolTable
-from .neurosynth_utils import StudyID, fetch_study_metadata, get_ns_mni_peaks_reported, get_ns_term_study_associations
+from ..neuroimaging.neurosynth_utils import StudyID, fetch_study_metadata, get_ns_mni_peaks_reported, get_ns_term_study_associations
 from . import query_resolution_expressions as fe
 from ..datalog import DatalogProgram
 from ..logic import ExistentialPredicate, UniversalPredicate

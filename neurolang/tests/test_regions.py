@@ -6,12 +6,12 @@ from numpy import random
 
 import nibabel as nib
 
-from ..aabb_tree import AABB
-from ..CD_relations import (cardinal_relation,
-                            cardinal_relation_prepare_regions,
-                            direction_matrix, is_in_direction)
+from ..neuroimaging.aabb_tree import AABB
+from ..neuroimaging.CD_relations import (cardinal_relation,
+                                         cardinal_relation_prepare_regions,
+                                         direction_matrix, is_in_direction)
 from ..exceptions import NeuroLangException
-from ..regions import (ExplicitVBR, ExplicitVBROverlay, PlanarVolume, Region,
+from ..neuroimaging.regions import (ExplicitVBR, ExplicitVBROverlay, PlanarVolume, Region,
                        SphericalVolume, region_difference, region_intersection,
                        region_union)
 

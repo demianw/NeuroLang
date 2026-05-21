@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..perior_tree import BoundedAABB, Boundary, Tree
+from ..neuroimaging.perior_tree import BoundedAABB, Boundary, Tree
 
 def _generate_random_box(x_bounds, y_bounds, boundary, size_bounds):
     lower_bound = np.array([np.random.uniform(*b) for b in (x_bounds, y_bounds)])

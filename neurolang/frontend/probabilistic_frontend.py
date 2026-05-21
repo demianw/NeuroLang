@@ -77,7 +77,7 @@ from ..probabilistic.weighted_model_counting import (
 from ..probabilistic.weighted_model_counting import (
     solve_succ_query as wmc_solve_succ_query,
 )
-from ..region_solver import RegionSolver
+from ..neuroimaging.region_solver import RegionSolver
 from ..relational_algebra import (
     NamedRelationalAlgebraFrozenSet,
     RelationalAlgebraColumnStr,

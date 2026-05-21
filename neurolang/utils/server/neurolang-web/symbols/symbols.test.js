@@ -51,13 +51,13 @@ const mockResults = {
         values: [[2.0, 77.0, 46.0, 0.0015321803045817697], [4.0, 63.0, 34.0, 0.00023572711035194132], [5.0, 64.0, 38.0, 0.000419401098292473], [8.0, 54.0, 38.0, 0.001412803281281338], [12.0, 61.0, 40.0, 0.0018112978377986602], [12.0, 69.0, 36.0, 0.00045956587380234065], [14.0, 38.0, 40.0, 0.0018165763699549008]]
       },
       TermInStudyTFIDF: {
-        row_type: ["<class 'str'>", "<class 'float'>", "<class 'neurolang.frontend.neurosynth_utils.StudyID'>"],
+        row_type: ["<class 'str'>", "<class 'float'>", "<class 'neurolang.neuroimaging.neurosynth_utils.StudyID'>"],
         columns: ['0', '1', '2'],
         size: 1049299,
         values: [['001', 0.055394216111399996, '9862924'], ['001', 0.09387570522489999, '11595392'], ['001', 0.0689931709903, '12077009'], ['001', 0.0996940021344, '12725761'], ['001', 0.09198243946769999, '12880904'], ['001', 0.0903373983476, '12958082'], ['001', 0.199392155694, '14561452'], ['001', 0.0735499288657, '14741317'], ['001', 0.10293863273399999, '14741643'], ['001', 0.079606876159, '15036060']]
       },
       RegionImage: {
-        row_type: ["<class 'neurolang.regions.ExplicitVBROverlay'>"],
+        row_type: ["<class 'neurolang.neuroimaging.regions.ExplicitVBROverlay'>"],
         columns: ['agg_create_region'],
         size: 2,
         values: [[{ image: 'someEncodedImageData', hash: '89er8798awre', center: [], max: 0.008, min: 0, q95: 0.001 }], [{ image: 'anotherEncodedImage', hash: '456eras8098ert', center: [], max: 0.009, min: 0.00002, q95: 0.00025 }]]
@@ -153,8 +153,8 @@ describe('SymbolsController', () => {
     let mockTableData
     const mockFunctions = {
       agg_count: { type: 'typing.Callable[[typing.Iterable], numpy.int64]', doc: 'Aggregate count function', function: true },
-      superior_of: { type: 'typing.Callable[[neurolang.regions.Region, neurolang.regions.Region], bool]', doc: 'Superior_of function', function: true },
-      agg_create_region: { type: 'typing.Callable[[typing.Iterable, typing.Iterable, typing.Iterable], neurolang.regions.ExplicitVBR]', doc: 'Create some brain region', function: true }
+      superior_of: { type: 'typing.Callable[[neurolang.neuroimaging.regions.Region, neurolang.neuroimaging.regions.Region], bool]', doc: 'Superior_of function', function: true },
+      agg_create_region: { type: 'typing.Callable[[typing.Iterable, typing.Iterable, typing.Iterable], neurolang.neuroimaging.regions.ExplicitVBR]', doc: 'Create some brain region', function: true }
     }
     let symbols
 

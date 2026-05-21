@@ -37,9 +37,9 @@ export const API_ROUTE = {
 
 // The custom data types which might need special rendering
 export const DATA_TYPES = {
-  studyID: "<class 'neurolang.frontend.neurosynth_utils.StudyID'>",
-  VBR: "<class 'neurolang.regions.ExplicitVBR'>",
-  VBROverlay: "<class 'neurolang.regions.ExplicitVBROverlay'>",
+  studyID: "<class 'neurolang.neuroimaging.neurosynth_utils.StudyID'>",
+  VBR: "<class 'neurolang.neuroimaging.regions.ExplicitVBR'>",
+  VBROverlay: "<class 'neurolang.neuroimaging.regions.ExplicitVBROverlay'>",
   MpltFigure: "<class 'matplotlib.figure.Figure'>"
 }
 

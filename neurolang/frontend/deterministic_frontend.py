@@ -12,8 +12,8 @@ from ..datalog.aggregation import (
 from ..datalog.negation import DatalogProgramNegationMixin
 from ..expression_walker import ExpressionBasicEvaluator
 from ..logic.horn_clauses import Fol2DatalogMixin
-from ..region_solver import RegionSolver
-from ..regions import ExplicitVBR, ExplicitVBROverlay
+from ..neuroimaging.region_solver import RegionSolver
+from ..neuroimaging.regions import ExplicitVBR, ExplicitVBROverlay
 from ..utils.data_manipulation import parse_region_label_map
 from .datalog.sugar import (
     TranslateSSugarToSelectByColumn,

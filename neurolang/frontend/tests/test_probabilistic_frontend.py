@@ -18,7 +18,7 @@ from ...probabilistic.exceptions import (
     ForbiddenConditionalQueryNonConjunctive,
     RepeatedTuplesInProbabilisticRelationError
 )
-from ...regions import SphericalVolume
+from ...neuroimaging.regions import SphericalVolume
 from ...utils.relational_algebra_set import (
     NamedRelationalAlgebraFrozenSet,
     RelationalAlgebraFrozenSet

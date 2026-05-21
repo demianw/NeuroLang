@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 
 from .. import NeurolangDL
-from ..neurosynth_utils import StudyID
+from ...neuroimaging.neurosynth_utils import StudyID
 
 
 @pytest.fixture

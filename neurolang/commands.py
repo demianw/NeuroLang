@@ -15,7 +15,7 @@ from .exceptions import InvalidCommandExpression, UnsupportedProgramError
 from .expression_pattern_matching import add_match
 from .expression_walker import PatternWalker
 from .expressions import Command, Constant, Symbol
-from .regions import EmptyRegion, ExplicitVBR
+from .neuroimaging.regions import EmptyRegion, ExplicitVBR
 
 
 class CommandsMixin(PatternWalker):

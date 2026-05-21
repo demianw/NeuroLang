@@ -11,7 +11,7 @@ from ... import expressions as exp, frontend
 from ...datalog import DatalogProgram, Fact, Implication
 from ...exceptions import NeuroLangException, UnsupportedProgramError, WrongArgumentsInPredicateError
 from ...expression_walker import ExpressionBasicEvaluator
-from ...regions import ExplicitVBR, SphericalVolume
+from ...neuroimaging.regions import ExplicitVBR, SphericalVolume
 from ...type_system import Unknown
 from .. import query_resolution, query_resolution_expressions as qre
 

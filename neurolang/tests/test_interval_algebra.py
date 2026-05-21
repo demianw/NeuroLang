@@ -1,10 +1,10 @@
 from numpy import random
-from ..interval_algebra import (
+from ..neuroimaging.interval_algebra import (
     converse, meets, before, starts, during,
     finishes, equals, overlaps, negate,
     get_intervals_relations
 )
-from ..regions import Region
+from ..neuroimaging.regions import Region
 from copy import deepcopy
 
 
