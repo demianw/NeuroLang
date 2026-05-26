@@ -70,6 +70,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+from operator import contains
+
 import nibabel as nib
 import numpy as np
 import yaml
@@ -87,8 +89,7 @@ _ENGINES_DIR = Path(__file__).parent / "engines"
 _ENGINES_YAML = _ENGINES_DIR / "engines.yaml"
 
 
-def _builtin_startswith(prefix: str, s: str) -> bool:
-    """Return True if *s* starts with *prefix*."""
+def _builtin_startswith(prefix, s):
     return s.startswith(prefix)
 
 
@@ -96,6 +97,7 @@ _BUILTIN_SYMBOLS: Dict[str, object] = {
     "exp": np.exp,
     "log": np.log,
     "startswith": _builtin_startswith,
+    "contains": contains,
 }
 
 
@@ -470,6 +472,16 @@ def _fetch_atlas_difumo(**kwargs):
     return datasets.fetch_atlas_difumo(**kwargs)
 
 
+# Parameters in the atlas YAML config that must NOT be forwarded to the
+# nilearn fetch_* function — they are consumed locally by the loader.
+_ATLAS_FETCH_SKIP = {
+    "predicate_name",
+    "description",
+    "threshold",
+    "prob_threshold",
+    "prob_predicate_name",
+}
+
 _ATLAS_REGISTRY = {
     "destrieux": {
         "fetch": _fetch_atlas_destrieux,
@@ -514,8 +526,12 @@ def _load_deterministic_atlas(
 ) -> None:
     """Load a deterministic atlas (e.g. Destrieux, Schaefer) as engine predicates."""
     info = _ATLAS_REGISTRY[atlas_name]
-    fetch_kw = {k: v for k, v in params.items() if k != "predicate_name"}
-    fetch_kw["data_dir"] = str(data_dir)
+    fetch_kw = {
+        k: v
+        for k, v in params.items()
+        if k not in _ATLAS_FETCH_SKIP
+    }
+    fetch_kw.setdefault("data_dir", str(data_dir))
     atl_data = info["fetch"](**fetch_kw)
 
     from neurolang.regions import ExplicitVBR
@@ -546,8 +562,12 @@ def _load_probabilistic_atlas(
       ``prob_threshold``, default 0.01, to keep the set size manageable).
     """
     info = _ATLAS_REGISTRY[atlas_name]
-    fetch_kw = {k: v for k, v in params.items() if k != "predicate_name"}
-    fetch_kw["data_dir"] = str(data_dir)
+    fetch_kw = {
+        k: v
+        for k, v in params.items()
+        if k not in _ATLAS_FETCH_SKIP
+    }
+    fetch_kw.setdefault("data_dir", str(data_dir))
     atl_data = info["fetch"](**fetch_kw)
 
     from neurolang.regions import ExplicitVBR
@@ -672,8 +692,52 @@ def _phase_atlases(nl, cfg, data_dir, engine_name):
 
 def _phase_datalog_init(nl, cfg):
     datalog_init = cfg.get("datalog_init")
-    if datalog_init:
-        nl.execute_datalog_program(datalog_init)
+    precompute = set(cfg.get("precompute", []))
+    if not datalog_init:
+        return
+
+    intermediate = nl.datalog_parser(datalog_init)
+
+    if not precompute:
+        nl.program_ir.walk(intermediate)
+        return
+
+    # Separate rules: precomputed predicates are materialised eagerly;
+    # all others remain as IDB rules evaluated lazily by the chase.
+    import neurolang.expressions as ir
+    from neurolang.datalog.expressions import Implication
+    from neurolang.logic import Union as LogicUnion
+
+    regular_formulas = []
+    precompute_formulas = []
+    for formula in intermediate.formulas:
+        if isinstance(formula, Implication):
+            head_name = formula.consequent.functor.name
+            if head_name in precompute:
+                precompute_formulas.append(formula)
+            else:
+                regular_formulas.append(formula)
+        else:
+            regular_formulas.append(formula)
+
+    if regular_formulas:
+        nl.program_ir.walk(LogicUnion(regular_formulas))
+
+    if precompute_formulas:
+        # Add precompute rules temporarily, materialise via chase,
+        # then swap the IDB entry for the EDB result set.
+        nl.program_ir.walk(LogicUnion(precompute_formulas))
+        solution = nl.solve_all()
+        for pred_name in list(precompute):
+            if pred_name not in solution:
+                continue
+            from neurolang.type_system import AbstractSet as AbstractSetType
+            result_set = solution[pred_name]
+            new_value = ir.Constant[AbstractSetType[result_set.row_type]](result_set)
+            for key in list(nl.symbol_table.keys()):
+                if key.name == pred_name:
+                    nl.symbol_table[key] = new_value
+                    break
 
 
 def _phase_relations(nl, cfg, engine_name, data_dir, rel_base_dir):

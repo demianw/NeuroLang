@@ -48,14 +48,20 @@ engines:
       destrieux:
         predicate_name: destrieux
         description: "Cortical region name and ExplicitVBR geometry"
+    precompute: [destrieux_voxel]
     datalog_init: |
       left_region(N, R) :- destrieux(N, R), startswith('lh', N)
       right_region(N, R) :- destrieux(N, R), startswith('rh', N)
+      destrieux_voxel(N, I, J, K) :- destrieux(N, R), contains(R, (I, J, K))
     predicates:
       destrieux:
         arity: 2
         columns: [name, region]
         description: "Cortical region name and ExplicitVBR geometry"
+      destrieux_voxel:
+        arity: 4
+        columns: [name, i, j, k]
+        description: "Individual voxel coordinates for each Destrieux region"
 
   # Example template usage (commented out — uncomment to enable):
   #
