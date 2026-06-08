@@ -39,7 +39,10 @@ Usage
 """
 
 import argparse
+import base64
+import os
 import sys
+import tempfile
 import time
 from pathlib import Path
 from typing import Optional
@@ -95,8 +98,101 @@ def _emit(df, fmt):
     return df.to_string(index=False)
 
 
+def _render_template(template: str, col_name: str, row_idx: int) -> str:
+    """Render an export path template with column/row substitutions.
+
+    Supports ``{col}`` (column name, safe for filesystem),
+    ``{row}`` (zero-based row index), and ``{column_name}`` (original name).
+    When no brace-delimited placeholders are present, the template is
+    treated as a prefix: ``{template}_row{row_idx}_{col_safe}.nii.gz``.
+    """
+    col_safe = col_name.replace("/", "_").replace(" ", "_")
+    if "{" in template:
+        return template.format(
+            col=col_safe, row=str(row_idx), column_name=col_name,
+        )
+    return f"{template}_row{row_idx}_{col_safe}.nii.gz"
+
+
+def _encode_nifti_base64(region) -> str:
+    """Encode a region's spatial image as a base64 string."""
+    import nibabel as nib
+
+    img = region.spatial_image()
+    with tempfile.NamedTemporaryFile(suffix=".nii") as tmp:
+        nib.save(img, tmp.name)
+        with open(tmp.name, "rb") as f:
+            return base64.b64encode(f.read()).decode("ascii")
+
+
+def _region_to_json(region, col_name, row_idx, nifti_export_path=None):
+    """Serialize a region to a JSON-compatible dict.
+
+    When *nifti_export_path* is provided, returns a reference to the file.
+    Otherwise, returns base64-encoded NIfTI data with a ``.nii`` name
+    suffix for Niivue ``loadFromBase64`` compatibility.
+    """
+    if nifti_export_path:
+        return {"nifti_path": nifti_export_path}
+    b64 = _encode_nifti_base64(region)
+    return {
+        "nifti_data": b64,
+        "nifti_name": f"{col_name}_row{row_idx}.nii",
+    }
+
+
+def _replace_region_cells(df, fmt, export_nifti):
+    """Replace brain-region cells with their export/summary values.
+
+    Scans *df* for ``ExplicitVBR`` / ``ExplicitVBROverlay`` instances:
+
+    * ``export_nifti`` is set -> save NIfTI file, show absolute path.
+    * ``--format json`` -> base64-encode (unless exported, show path).
+    * ``table`` / ``csv`` -> compact summary ``ExplicitVBR(N voxels)``.
+    """
+    from neurolang.regions import ExplicitVBR, ExplicitVBROverlay
+
+    has_regions = any(
+        isinstance(val, (ExplicitVBR, ExplicitVBROverlay))
+        for col in df.columns
+        for val in df[col]
+    )
+    if not has_regions:
+        return df
+
+    import nibabel as nib
+
+    df = df.copy()
+    for col_idx, col_name in enumerate(df.columns):
+        for row_idx in range(len(df)):
+            val = df.iat[row_idx, col_idx]
+            if not isinstance(val, (ExplicitVBR, ExplicitVBROverlay)):
+                continue
+
+            if export_nifti:
+                path = _render_template(export_nifti, col_name, row_idx)
+                parent = os.path.dirname(path)
+                if parent:
+                    os.makedirs(parent, exist_ok=True)
+                nib.save(val.spatial_image(), path)
+                abs_path = os.path.abspath(path)
+                if fmt == "json":
+                    cell_val = _region_to_json(val, col_name, row_idx, abs_path)
+                else:
+                    cell_val = abs_path
+            elif fmt == "json":
+                cell_val = _region_to_json(val, col_name, row_idx)
+            else:
+                cell_val = f"ExplicitVBR({len(val.voxels)} voxels)"
+
+            df.iat[row_idx, col_idx] = cell_val
+
+    return df
+
+
 def _format_result(
-    result, fmt: str = "table", column_names: Optional[list[str]] = None
+    result, fmt: str = "table", column_names: Optional[list[str]] = None,
+    export_nifti: Optional[str] = None,
 ) -> str:
     """Format a query result for display."""
     if result is None:
@@ -105,17 +201,15 @@ def _format_result(
         return "true" if result else "false"
 
     try:
-        # Unwrap Constant -> concrete set when chase produced wrapped result
         if hasattr(result, "value") and hasattr(result.value, "unwrap"):
             inner = result.value.unwrap()
             if hasattr(inner, "as_pandas_dataframe"):
-                return _emit(
-                    _rename_unnamed_columns(inner.as_pandas_dataframe(), column_names),
-                    fmt,
-                )
+                df = inner.as_pandas_dataframe()
+                df = _rename_unnamed_columns(df, column_names)
+                df = _replace_region_cells(df, fmt, export_nifti)
+                return _emit(df, fmt)
             result = inner
 
-        # Get a DataFrame from the bare set (named or unnamed columns)
         if hasattr(result, "columns") and len(result.columns) > 0:
             df = pd.DataFrame(iter(result), columns=result.columns)
         else:
@@ -125,7 +219,9 @@ def _format_result(
             arity = result.arity if hasattr(result, "arity") else len(rows[0])
             df = pd.DataFrame(rows, columns=[f"c{i}" for i in range(arity)])
 
-        return _emit(_rename_unnamed_columns(df, column_names), fmt)
+        df = _rename_unnamed_columns(df, column_names)
+        df = _replace_region_cells(df, fmt, export_nifti)
+        return _emit(df, fmt)
     except Exception as exc:
         print(f"Warning: result formatting failed: {exc}", file=sys.stderr)
         return str(result)
@@ -214,6 +310,16 @@ def _build_parser() -> argparse.ArgumentParser:
         help="When used with --squall, print the Datalog IR (rules and "
         "queries) that the SQUALL program compiles to, then exit.  "
         "Useful for debugging and understanding the translation.",
+    )
+    parser.add_argument(
+        "--export-nifti",
+        metavar="TEMPLATE",
+        default=None,
+        help="Export brain-region columns (ExplicitVBR / ExplicitVBROverlay) "
+        "as NIfTI files using a path template.  Supports ``{col}``, ``{row}``, "
+        "and ``{column_name}`` placeholders.  When no braces are present, "
+        "``_row{idx}_{col}.nii.gz`` is appended.  Parent directories are "
+        "created automatically.",
     )
 
     return parser
@@ -507,7 +613,8 @@ def main(argv: Optional[list] = None) -> None:
         if isinstance(result, dict):
             for key, sub_result in result.items():
                 output = _format_result(
-                    sub_result, fmt=args.format, column_names=None
+                    sub_result, fmt=args.format, column_names=None,
+                    export_nifti=args.export_nifti,
                 )
                 if output:
                     print(f"── {key} ──")
@@ -515,7 +622,8 @@ def main(argv: Optional[list] = None) -> None:
                     print()
         else:
             output = _format_result(
-                result, fmt=args.format, column_names=None
+                result, fmt=args.format, column_names=None,
+                export_nifti=args.export_nifti,
             )
             if output:
                 print(output)
@@ -526,7 +634,8 @@ def main(argv: Optional[list] = None) -> None:
         else:
             column_names = None
         output = _format_result(
-            result, fmt=args.format, column_names=column_names
+            result, fmt=args.format, column_names=column_names,
+            export_nifti=args.export_nifti,
         )
         if output:
             print(output)

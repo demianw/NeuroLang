@@ -1,12 +1,19 @@
 """Tests for the neurolang-query CLI module."""
 
+import base64
+import os
+
 import pytest
 
 from neurolang.utils.cli import (
     _build_parser,
+    _encode_nifti_base64,
     _execute_program,
     _execute_squall_program,
     _format_result,
+    _region_to_json,
+    _render_template,
+    _replace_region_cells,
     _show_squall_datalog,
 )
 
@@ -665,3 +672,237 @@ class TestExecuteSquallProgram:
             nl, "define as Active every person that plays."
         )
         assert _format_result(result) == ""
+
+
+# ---------------------------------------------------------------------------
+# _render_template
+# ---------------------------------------------------------------------------
+
+
+class TestRenderTemplate:
+    def test_with_placeholders(self):
+        result = _render_template("/tmp/{col}_{row}.nii.gz", "region", 0)
+        assert result == "/tmp/region_0.nii.gz"
+
+    def test_column_name_placeholder(self):
+        result = _render_template(
+            "{column_name}_{row}.nii.gz", "my_region", 1
+        )
+        assert result == "my_region_1.nii.gz"
+
+    def test_no_placeholders(self):
+        result = _render_template("/tmp/region", "my_col", 0)
+        assert result == "/tmp/region_row0_my_col.nii.gz"
+
+    def test_col_slash_replaced(self):
+        result = _render_template("{col}.nii", "a/b", 0)
+        assert result == "a_b.nii"
+
+    def test_col_space_replaced(self):
+        result = _render_template("{col}.nii", "my col", 0)
+        assert result == "my_col.nii"
+
+    def test_multiple_cells(self):
+        r0 = _render_template("{col}_r{row}", "region", 0)
+        r1 = _render_template("{col}_r{row}", "region", 1)
+        assert r0 == "region_r0"
+        assert r1 == "region_r1"
+
+    def test_column_name_preserves_original(self):
+        result = _render_template("{column_name}", "my_col", 0)
+        assert result == "my_col"
+
+
+# ---------------------------------------------------------------------------
+# NIfTI encoding / region-export helpers
+# ---------------------------------------------------------------------------
+
+
+class TestNiftiEncoding:
+
+    @pytest.fixture
+    def vbr(self):
+        import numpy as np
+        from neurolang.regions import ExplicitVBR
+
+        return ExplicitVBR(
+            voxels=np.array([[0, 0, 0], [1, 0, 0]], dtype=int),
+            affine_matrix=np.eye(4),
+            image_dim=(5, 5, 5),
+        )
+
+    def test_encode_nifti_base64(self, vbr):
+        b64 = _encode_nifti_base64(vbr)
+        assert isinstance(b64, str)
+        assert len(b64) > 0
+        import tempfile
+        import nibabel as nib
+        raw = base64.b64decode(b64)
+        with tempfile.NamedTemporaryFile(suffix=".nii") as tmp:
+            tmp.write(raw)
+            tmp.flush()
+            img = nib.load(tmp.name)
+            assert img.shape == (5, 5, 5)
+
+    def test_region_to_json_no_export(self, vbr):
+        result = _region_to_json(vbr, "region_col", 0)
+        assert isinstance(result, dict)
+        assert "nifti_data" in result
+        assert "nifti_name" in result
+        assert result["nifti_name"] == "region_col_row0.nii"
+        assert isinstance(result["nifti_data"], str)
+        assert len(result["nifti_data"]) > 0
+
+    def test_region_to_json_with_export(self, vbr):
+        result = _region_to_json(
+            vbr, "region_col", 0, nifti_export_path="/tmp/reg.nii.gz"
+        )
+        assert isinstance(result, dict)
+        assert result == {"nifti_path": "/tmp/reg.nii.gz"}
+
+    def test_region_to_json_roundtrip(self, vbr):
+        import tempfile
+        import nibabel as nib
+        result = _region_to_json(vbr, "r", 0)
+        raw = base64.b64decode(result["nifti_data"])
+        with tempfile.NamedTemporaryFile(suffix=".nii") as tmp:
+            tmp.write(raw)
+            tmp.flush()
+            img = nib.load(tmp.name)
+            assert img.shape == (5, 5, 5)
+
+    def test_replace_no_regions(self):
+        import pandas as pd
+        df = pd.DataFrame({"x": [1, 2], "y": ["a", "b"]})
+        result = _replace_region_cells(df, "table", None)
+        assert list(result["x"]) == [1, 2]
+
+    def test_replace_table_summary(self, vbr):
+        import pandas as pd
+        df = pd.DataFrame({"region": [vbr]})
+        result = _replace_region_cells(df, "table", None)
+        val = result.iloc[0, 0]
+        assert isinstance(val, str)
+        assert val == "ExplicitVBR(2 voxels)"
+
+    def test_replace_json_without_export(self, vbr):
+        import pandas as pd
+        df = pd.DataFrame({"region": [vbr]})
+        result = _replace_region_cells(df, "json", None)
+        val = result.iloc[0, 0]
+        assert isinstance(val, dict)
+        assert "nifti_data" in val
+        assert "nifti_name" in val
+
+    def test_replace_json_with_export(self, vbr, tmp_path):
+        import pandas as pd
+        template = str(tmp_path / "region")
+        df = pd.DataFrame({"region": [vbr]})
+        result = _replace_region_cells(df, "json", template)
+        val = result.iloc[0, 0]
+        assert isinstance(val, dict)
+        assert "nifti_path" in val
+        assert val["nifti_path"].endswith("_row0_region.nii.gz")
+        assert os.path.exists(val["nifti_path"])
+
+    def test_replace_with_export(self, vbr, tmp_path):
+        import pandas as pd
+        template = str(tmp_path / "region")
+        df = pd.DataFrame({"region": [vbr]})
+        result = _replace_region_cells(df, "table", template)
+        val = result.iloc[0, 0]
+        assert val.endswith("_row0_region.nii.gz")
+        assert os.path.exists(val)
+
+    def test_replace_with_export_nested_dir(self, vbr, tmp_path):
+        import pandas as pd
+        template = str(tmp_path / "sub" / "deep" / "region")
+        df = pd.DataFrame({"r": [vbr]})
+        result = _replace_region_cells(df, "table", template)
+        val = result.iloc[0, 0]
+        assert val.endswith("_row0_r.nii.gz")
+        assert os.path.exists(val)
+
+    def test_replace_mixed_columns(self, vbr):
+        import pandas as pd
+        df = pd.DataFrame({"x": [42], "region": [vbr]})
+        result = _replace_region_cells(df, "table", None)
+        assert result.iloc[0, 0] == 42
+        assert result.iloc[0, 1] == "ExplicitVBR(2 voxels)"
+
+    def test_replace_with_explicit_vbr_overlay(self):
+        import numpy as np
+        import pandas as pd
+        from neurolang.regions import ExplicitVBROverlay
+
+        overlay = ExplicitVBROverlay(
+            voxels=np.array([[0, 0, 0], [1, 0, 0]], dtype=int),
+            affine_matrix=np.eye(4),
+            overlay=np.array([0.5, 0.8]),
+            image_dim=(5, 5, 5),
+        )
+        df = pd.DataFrame({"over": [overlay]})
+        result = _replace_region_cells(df, "table", None)
+        assert "ExplicitVBR" in result.iloc[0, 0]
+
+    def test_json_format_uses_base64(self, vbr):
+        from neurolang.utils.relational_algebra_set.pandas import (
+            NamedRelationalAlgebraFrozenSet,
+        )
+
+        nras = NamedRelationalAlgebraFrozenSet(
+            columns=("name", "region"),
+            iterable=[("roi1", vbr)],
+        )
+        output = _format_result(nras, fmt="json")
+        assert '"nifti_data"' in output
+        assert '"nifti_name"' in output
+        assert '"roi1"' in output
+
+    def test_table_format_shows_summary(self, vbr):
+        from neurolang.utils.relational_algebra_set.pandas import (
+            NamedRelationalAlgebraFrozenSet,
+        )
+
+        nras = NamedRelationalAlgebraFrozenSet(
+            columns=("region",),
+            iterable=[(vbr,)],
+        )
+        output = _format_result(nras, fmt="table")
+        assert "ExplicitVBR(2 voxels)" in output
+
+    def test_csv_format_summary(self, vbr):
+        from neurolang.utils.relational_algebra_set.pandas import (
+            NamedRelationalAlgebraFrozenSet,
+        )
+
+        nras = NamedRelationalAlgebraFrozenSet(
+            columns=("region",),
+            iterable=[(vbr,)],
+        )
+        output = _format_result(nras, fmt="csv")
+        assert "ExplicitVBR(2 voxels)" in output
+
+
+# ---------------------------------------------------------------------------
+# --export-nifti parser flag
+# ---------------------------------------------------------------------------
+
+
+class TestExportNiftiFlag:
+    def test_defaults_to_none(self):
+        parser = _build_parser()
+        args = parser.parse_args([])
+        assert args.export_nifti is None
+
+    def test_export_nifti_flag(self):
+        parser = _build_parser()
+        args = parser.parse_args(["--export-nifti", "/tmp/region"])
+        assert args.export_nifti == "/tmp/region"
+
+    def test_export_nifti_with_template(self):
+        parser = _build_parser()
+        args = parser.parse_args(
+            ["--export-nifti", "/tmp/{col}_{row}", "ans(x) :- R(x)"]
+        )
+        assert args.export_nifti == "/tmp/{col}_{row}"
