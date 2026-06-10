@@ -286,8 +286,9 @@ class RelationalAlgebraFrozenSet(abc.RelationalAlgebraFrozenSet):
         Examples
         --------
         Select the elements where col0 == col1 and col1 == col2
+
         >>> ras = RelationalAlgebraFrozenSet(
-                [(i % 2, i, i * 2) for i in range(5)])
+        ...     [(i % 2, i, i * 2) for i in range(5)])
         >>> ras.selection_columns({0:1, 1: 2})
            0  1  2
         0  0  0  0
@@ -1002,6 +1003,7 @@ class NamedRelationalAlgebraFrozenSet(
                 iterable=[],
             )
         new_container = self._container.copy()
+        new_container = new_container.infer_objects()
         seen_pure_columns = set()
         for dst_column, operation in eval_expressions.items():
             if isinstance(operation, RelationalAlgebraStringExpression):
@@ -1159,11 +1161,13 @@ class RelationalAlgebraSet(
 ):
     def add(self, value):
         value = self._normalise_element(value)
-        e_hash = hash(value)
         if self.is_empty():
-            self._container = pd.DataFrame([value], index=[e_hash])
+            self._container = pd.DataFrame([value])
         else:
-            self._container.loc[e_hash] = value
+            new_row = pd.DataFrame([value], columns=self._container.columns)
+            self._container = pd.concat(
+                [self._container, new_row], ignore_index=True
+            )
 
     def discard(self, value):
         if not self.is_empty():
