@@ -6,6 +6,7 @@ Complements QueryBuilderDatalog class with probabilistic capabilities
 2- sove probabilistic queries
 """
 import collections
+import functools
 import typing
 from typing import (
     AbstractSet,
@@ -35,8 +36,12 @@ from ..datalog.aggregation import (
 from ..datalog.chase import Chase
 from ..datalog.constraints_representation import DatalogConstraintsProgram
 from ..datalog.exceptions import InvalidMagicSetError
+from ..exceptions import SymbolNotFoundError
 from ..datalog.expression_processing import (
     EqualitySymbolLeftHandSideNormaliseMixin,
+    InlineEqualityConstantsMixin,
+    extract_logic_atoms,
+    is_aggregation_rule,
 )
 from ..datalog.magic_sets import magic_rewrite
 from ..datalog.negation import DatalogProgramNegationMixin
@@ -88,20 +93,63 @@ from .datalog.sugar import (
     TranslateProbabilisticQueryMixin,
     TranslateQueryBasedProbabilisticFactMixin,
 )
-from .datalog.sugar.spatial import TranslateEuclideanDistanceBoundMatrixMixin
+from .datalog.sugar.spatial import (
+    TranslateEuclideanDistanceBoundMatrixMixin,
+    TranslateRegionDestroy,
+)
 from .datalog.syntax_preprocessing import ProbFol2DatalogMixin
+from .type_resolution import TypeResolutionMixin
+from .datalog.squall import ResolveInvertedFunctionApplicationMixin
 from .frontend_extensions import NumpyFunctionsMixin
 from .query_resolution_datalog import QueryBuilderDatalog
 
 
+def instance_lru_cache(key_fn, maxsize=128):
+    """LRU cache decorator for instance methods with non-hashable arguments.
+
+    key_fn(*args, **kwargs) must return a hashable cache key.
+    The cache is stored per-instance to avoid cross-instance sharing.
+    Call wrapper.cache_clear(instance) to invalidate.
+    """
+    def decorator(method):
+        cache_attr = f'_lru_cache_{method.__name__}'
+
+        @functools.wraps(method)
+        def wrapper(self, *args, **kwargs):
+            cache = getattr(self, cache_attr, None)
+            if cache is None:
+                cache = collections.OrderedDict()
+                setattr(self, cache_attr, cache)
+            key = key_fn(*args, **kwargs)
+            if key in cache:
+                cache.move_to_end(key)
+                return cache[key]
+            result = method(self, *args, **kwargs)
+            cache[key] = result
+            if maxsize is not None and len(cache) > maxsize:
+                cache.popitem(last=False)
+            return result
+
+        def cache_clear(instance):
+            setattr(instance, cache_attr, collections.OrderedDict())
+
+        wrapper.cache_clear = cache_clear
+        return wrapper
+    return decorator
+
+
 class RegionFrontendCPLogicSolver(
     EqualitySymbolLeftHandSideNormaliseMixin,
+    InlineEqualityConstantsMixin,
     TranslateProbabilisticQueryMixin,
+    ResolveInvertedFunctionApplicationMixin,
     TranslateToLogicWithAggregation,
     TranslateQueryBasedProbabilisticFactMixin,
     TranslateEuclideanDistanceBoundMatrixMixin,
     QueryBasedProbFactToDetRule,
     ProbFol2DatalogMixin,
+    TypeResolutionMixin,
+    TranslateRegionDestroy,
     RegionSolver,
     CommandsMixin,
     NumpyFunctionsMixin,
@@ -219,6 +267,7 @@ class NeurolangPDL(QueryBuilderDatalog):
             for e in expressions:
                 self.program_ir.walk(e)
 
+        self._rewrite_det_idb.cache_clear(self)
         return self.connector_symbol
 
     @property
@@ -233,8 +282,8 @@ class NeurolangPDL(QueryBuilderDatalog):
         List[fe.Expression]
             see description
 
-        Example
-        -------
+        Examples
+        --------
         >>> nl = NeurolangPDL()
         >>> P = nl.add_uniform_probabilistic_choice_over_set(
         ...     [("a",), ("b",), ("c",)], name="P"
@@ -340,7 +389,21 @@ class NeurolangPDL(QueryBuilderDatalog):
             raise UnsupportedQueryError(
                 "Queries on probabilistic predicates are not supported"
             )
-        query = self.program_ir.symbol_table[query_pred_symb].formulas[0]
+
+        # The probabilistic query path (below) assumes the predicate functor
+        # maps to a rule entry (Union.formulas) in the program_ir symbol
+        # table.  This holds when querying an IDB predicate defined by a
+        # rule, but fails for:
+        #   1. EDB predicates — symbol entry is a Constant (no .formulas).
+        #   2. Conjunction queries (p(x), q(y)) — functor is `and_`, which
+        #      is not in the symbol table at all.
+        # In both cases fall through to the base QueryBuilderDatalog
+        # implementation which creates a fresh query rule and runs chase.
+        symbol_entry = self.program_ir.symbol_table.get(query_pred_symb, None)
+        if symbol_entry is None or isinstance(symbol_entry, ir.Constant):
+            return super()._execute_query(head, predicate)
+
+        query = symbol_entry.formulas[0]
 
         try:
             with self.scope:
@@ -359,7 +422,7 @@ class NeurolangPDL(QueryBuilderDatalog):
                 self.program_ir.walk(magic_rules)
                 solution = self._solve(magic_query)
                 query_pred_symb = magic_query.consequent.functor
-        except (InvalidMagicSetError, UnsupportedProgramError) :
+        except (InvalidMagicSetError, UnsupportedProgramError, SymbolNotFoundError):
             solution = self._solve(query)
 
         if not isinstance(head, tuple):
@@ -389,8 +452,8 @@ class NeurolangPDL(QueryBuilderDatalog):
             extensional and intentional facts that have been derived
             through the current program, optionally with probabilities
 
-        Example
-        -------
+        Examples
+        --------
         Note: example ran with pandas backend
         >>> nl = NeurolangPDL()
         >>> P = nl.add_uniform_probabilistic_choice_over_set(
@@ -402,13 +465,6 @@ class NeurolangPDL(QueryBuilderDatalog):
         >>> with nl.scope as e:
         ...     e.Z[e.PROB[e.x], e.x] = P[e.x] & Q[e.x]
         ...     solution = nl.solve_all()
-        >>> solution
-        {
-            'Z':
-                PROB        x
-            0   0.111111    a
-            1   0.111111    c
-        }
         """
         solution_ir = self._solve()
         solution = {}
@@ -453,7 +509,7 @@ class NeurolangPDL(QueryBuilderDatalog):
         Result obtained after resolution of the deterministic stratum
         '''
         if "__constraints__" in self.symbol_table:
-            det_idb = self._rewrite_program_with_ontology(det_idb)
+            det_idb = self._rewrite_det_idb(det_idb)
             if hasattr(self, 'connector_symbol'):
                 connector_rules = tuple(
                     [q
@@ -516,6 +572,70 @@ class NeurolangPDL(QueryBuilderDatalog):
                 builtin_symb
             ]
         solver.walk(postprob_idb)
+        # Split plain Datalog rules from aggregation rules so that each
+        # Chase stratum only contains rules of a single kind.  This can
+        # happen when a MARG result rule (plain) and an aggregation rule
+        # both land in post_probabilistic together (e.g. SQUALL programs).
+        plain_rules = Union(tuple(
+            r for r in postprob_idb.formulas if not is_aggregation_rule(r)
+        ))
+        agg_rules = Union(tuple(
+            r for r in postprob_idb.formulas if is_aggregation_rule(r)
+        ))
+        if plain_rules.formulas and agg_rules.formulas:
+            # Three-pass: plain first (produces activation_given_term),
+            # then AGG (aggregates it), then plain again for rules that
+            # depend on AGG output (e.g. a fresh query-wrapper predicate).
+            def _make_solver(src_solution):
+                s = RegionFrontendCPLogicSolver()
+                for psymb, relation in src_solution.items():
+                    s.add_extensional_predicate_from_tuples(
+                        psymb, relation.value
+                    )
+                for builtin_symb in self.program_ir.builtins():
+                    s.symbol_table[builtin_symb] = (
+                        self.program_ir.symbol_table[builtin_symb]
+                    )
+                return s
+
+            # Pass 1: plain rules → activation_given_term and peers
+            plain_solver1 = _make_solver(solution)
+            plain_solver1.walk(plain_rules)
+            plain_sol1 = self.chase_class(
+                plain_solver1, rules=plain_rules
+            ).build_chase_solution()
+            combined1 = dict(solution)
+            combined1.update(plain_sol1)
+
+            # Pass 2: AGG rules → activation_given_term_image
+            agg_solver = _make_solver(combined1)
+            agg_solver.walk(agg_rules)
+            agg_sol = self.chase_class(
+                agg_solver, rules=agg_rules
+            ).build_chase_solution()
+            combined2 = dict(combined1)
+            combined2.update(agg_sol)
+
+            # Pass 3: plain rules that depend on AGG output and are NOT
+            # already solved (consequent not yet in combined2).
+            agg_symbs = {r.consequent.functor for r in agg_rules.formulas}
+            post_agg_rules = Union(tuple(
+                r for r in plain_rules.formulas
+                if r.consequent.functor not in combined2
+                and any(
+                    p.functor in agg_symbs
+                    for p in extract_logic_atoms(r.antecedent)
+                    if hasattr(p, 'functor')
+                )
+            ))
+            if post_agg_rules.formulas:
+                plain_solver2 = _make_solver(combined2)
+                plain_solver2.walk(post_agg_rules)
+                plain_sol2 = self.chase_class(
+                    plain_solver2, rules=post_agg_rules
+                ).build_chase_solution()
+                combined2.update(plain_sol2)
+            return combined2
         chase = self.chase_class(solver, rules=postprob_idb)
         solution = chase.build_chase_solution()
         return solution
@@ -560,6 +680,20 @@ class NeurolangPDL(QueryBuilderDatalog):
         )
         return ir.Constant[AbstractSet](query_solution)
 
+    @instance_lru_cache(
+        key_fn=lambda det_idb: frozenset(str(r) for r in det_idb.formulas),
+        maxsize=32,
+    )
+    def _rewrite_det_idb(self, det_idb):
+        """Xrewrite det_idb against ontology constraints, LRU-cached per instance.
+
+        Only the Xrewrite step is cached. The connector_rules scan that follows
+        in _solve_deterministic_stratum accesses live program_ir and is NOT
+        cached, so EDB added after load_ontology() remains visible.
+        Cache is invalidated by load_ontology() on each call.
+        """
+        return self._rewrite_program_with_ontology(det_idb)
+
     def _rewrite_program_with_ontology(self, deterministic_program):
         orw = OntologyRewriter(
             deterministic_program,
@@ -586,8 +720,8 @@ class NeurolangPDL(QueryBuilderDatalog):
         in the same possible world, contrary to a probabilistic choice.
         See example for details.
 
-        Warning
-        -------
+        Warnings
+        --------
         Typing for the iterable is improper, true -but yet unsupported
         in Python typing- typing should be Iterable[Tuple[float, Any, ...]]
         See examples
@@ -609,8 +743,8 @@ class NeurolangPDL(QueryBuilderDatalog):
         fe.Symbol
             see description
 
-        Example
-        -------
+        Examples
+        --------
         >>> nl = NeurolangPDL()
         >>> p = [(0.8, 'a', 'b'), (0.7, 'b', 'c')]
         >>> nl.add_probabilistic_facts_from_tuples(p, name="P")
@@ -646,8 +780,8 @@ class NeurolangPDL(QueryBuilderDatalog):
         in the set are mutually exclusive.
         See example for details.
 
-        Warning
-        -------
+        Warnings
+        --------
         Typing for the iterable is improper, true -but yet unsupported-
         typing should be Iterable[Tuple[float, Any, ...]]
         See examples
@@ -675,8 +809,8 @@ class NeurolangPDL(QueryBuilderDatalog):
         DistributionDoesNotSumToOneError
             if float probabilities do not sum to 1.
 
-        Example
-        -------
+        Examples
+        --------
         >>> nl = NeurolangPDL()
         >>> p = [(0.8, 'a', 'b'), (0.2, 'b', 'c')]
         >>> nl.add_probabilistic_choice_from_tuples(p, name="P")
@@ -743,8 +877,8 @@ class NeurolangPDL(QueryBuilderDatalog):
         fe.Symbol
             see description
 
-        Example
-        -------
+        Examples
+        --------
         >>> nl = NeurolangPDL()
         >>> p = [('a',), ('b',)]
         >>> nl.add_uniform_probabilistic_choice_over_set(p, name="P")

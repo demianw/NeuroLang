@@ -14,13 +14,15 @@ from typing import (AbstractSet, Any, Callable, Generic, Iterable, Mapping,
 
 import numpy as np
 from typing_inspect import (get_origin, is_callable_type, is_generic_type,
-                            is_tuple_type, is_typevar, is_union_type, get_parameters)
+                            is_tuple_type, is_typevar, is_union_type,
+                            get_parameters, get_args as ti_get_args)
 
 from ..exceptions import NeuroLangException
 
 
 NEW_TYPING_39 = sys.version_info[:3] >= (3, 9, 0)
 NEW_TYPING_37 = (sys.version_info[:3] >= (3, 7, 0)) and not NEW_TYPING_39
+NEW_TYPING_312 = sys.version_info[:2] >= (3, 12)
 
 
 class NeuroLangTypeException(NeuroLangException):
@@ -49,9 +51,14 @@ if not (NEW_TYPING_37 or NEW_TYPING_39):
 
     Unknown = _Unknown(_root=True)
 elif NEW_TYPING_37 or NEW_TYPING_39:
-    from typing import _Final, _Immutable, _GenericAlias
+    from typing import _Final, _GenericAlias
+    if not NEW_TYPING_312:
+        from typing import _Immutable
+        _Unknown_bases = (_Final, _Immutable)
+    else:
+        _Unknown_bases = (_Final,)
 
-    class Unknown(_Final, _Immutable, _root=True):
+    class Unknown(*_Unknown_bases, _root=True):
         """Special type indicating an unknown type.
 
         - Unknown is compatible with every type.
@@ -92,6 +99,17 @@ def is_consistent(type1, type2):
 
         if not is_consistent(generic1, generic2):
             return False
+
+        if is_callable_type(type1):
+            args1, ret1 = get_args(type1)
+            args2, ret2 = get_args(type2)
+            if args1 is ... or args2 is ...:
+                return is_consistent(ret1, ret2)
+            return (
+                len(args1) == len(args2) and
+                is_consistent(ret1, ret2) and
+                all(is_consistent(a1, a2) for a1, a2 in zip(args1, args2))
+            )
 
         type_parameters1 = get_args(type1)
         type_parameters2 = get_args(type2)
@@ -170,6 +188,27 @@ def is_leq_informative_parameterized_right(left, right):
         type_parameters_left = get_args(left)
         type_parameters_right = get_args(right)
 
+        # For Callable types, get_args returns ([arg_types], return_type).
+        # The arg_types list may be Ellipsis (meaning "any args") on the left
+        # side. Compare arg lists and return types separately.
+        if is_callable_type(left):
+            args_left, ret_left = type_parameters_left
+            args_right, ret_right = type_parameters_right
+            if not is_leq_informative(ret_left, ret_right):
+                return False
+            # Ellipsis arg-spec means "unknown args" — least informative
+            if args_left is ...:
+                return True
+            if args_right is ...:
+                return False
+            return (
+                len(args_left) == len(args_right) and
+                all(
+                    is_leq_informative(a_l, a_r)
+                    for a_l, a_r in zip(args_left, args_right)
+                )
+            )
+
         if len(type_parameters_left) != len(type_parameters_right):
             return False
 
@@ -197,6 +236,18 @@ def is_type(type_):
     )
 
 
+def _has_type_args(type_):
+    """
+    Check if a type is truly parameterized with concrete args.
+
+    In Python 3.14, bare Union has __args__ as a member_descriptor (not a
+    tuple), whereas parameterized Union[int, float].__args__ is a tuple.
+    This helper returns True only when __args__ is an actual tuple.
+    """
+    args = getattr(type_, '__args__', None)
+    return isinstance(args, tuple)
+
+
 def is_parametrical(type_):
     is_parametrical_generic = any(
         p(type_)
@@ -211,7 +262,7 @@ def is_parametrical(type_):
             )
         elif NEW_TYPING_39:
             return not (
-                hasattr(type_, '__args__') or
+                _has_type_args(type_) or
                 hasattr(type_, '__parameters')
             )
         else:
@@ -237,7 +288,7 @@ def is_parameterized(type_):
             )
         elif NEW_TYPING_39:
             return (
-                hasattr(type_, '__args__') or
+                _has_type_args(type_) or
                 hasattr(type, '__parameters__')
             )
         else:
@@ -464,7 +515,7 @@ def infer_type_builtins(builtin):
 
 def get_args(type_):
     if is_parameterized(type_):
-        ret = type_.__args__
+        ret = ti_get_args(type_)
         if ret is None:
             ret = tuple()
     elif is_parametrical(type_):

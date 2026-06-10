@@ -1,0 +1,60 @@
+name: Tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        allow-prereleases: true
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install pytest pytest-cov pytest-timeout
+        python -m pip install -e ".[dev]"
+
+    - name: Run tests with pytest
+      run: |
+        python -m pytest neurolang -v --tb=short --timeout=600
+      timeout-minutes: 30
+
+    - name: Run tests with coverage
+      run: |
+        python -m pytest neurolang --cov=neurolang --cov-report=xml --cov-report=term --timeout=600
+      timeout-minutes: 30
+      if: matrix.python-version == '3.12'
+
+    - name: Generate coverage badge
+      run: |
+        pip install coverage-badge
+        mkdir -p badges
+        coverage-badge -o badges/coverage.svg -f
+      if: github.ref == 'refs/heads/master' && matrix.python-version == '3.12'
+
+    - name: Publish badge to gh-pages
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./badges
+        destination_dir: ./
+        keep_files: false
+      if: github.ref == 'refs/heads/master' && matrix.python-version == '3.12'

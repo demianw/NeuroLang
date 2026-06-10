@@ -544,7 +544,7 @@ def test_neurolang_dl_datalog_code_statement_autocompletion():
     """
     )
     expected = {'Signs': {'values': {'@', '∃', '('}}, 'Numbers': {'values': set()}, 'Text': {'values': set()},
-                'Operators': {'values': {'~', '¬'}}, 'Cmd_identifier': {'values': set()}, 'Functions': {'values': {'lambda'}}, 'Identifier_regexp': {'values': set()}, 'Reserved words': {'values': {'EXISTS', 'exists'}}, 'Boleans': {'values': {'False', '⊤', '⊥', 'True'}}, 'Expression symbols': {'values': set()}, 'Python string': {'values': set()}, 'Strings': {'values': {'<identifier_regexp>', '<cmd_identifier>'}}, 'commands': {'values': set()}, 'functions': {'values': set()}, 'base symbols': {'values': set()}, 'query symbols': {'values': set()}}
+                'Operators': {'values': {'~', '¬'}}, 'Cmd_identifier': {'values': set()}, 'Functions': {'values': {'lambda'}}, 'Identifier_regexp': {'values': set()}, 'Reserved words': {'values': {'AGGREGATE', 'EXISTS', 'MARG', 'PROB', 'SUCC', 'exists'}}, 'Boleans': {'values': {'False', '⊤', '⊥', 'True'}}, 'Expression symbols': {'values': set()}, 'Python string': {'values': set()}, 'Strings': {'values': {'<identifier_regexp>', '<cmd_identifier>'}}, 'commands': {'values': set()}, 'functions': {'values': set()}, 'base symbols': {'values': set()}, 'query symbols': {'values': set()}}
     assert res == expected
 
 
@@ -798,6 +798,132 @@ def test_neurolang_dl_set_destroy():
     assert set(q) == {(0,), (1,), (2,)}
 
 
+def test_neurolang_dl_region_destroy():
+    neurolang = frontend.NeurolangDL()
+    contains_ = neurolang.add_symbol(contains)
+
+    voxels1 = np.array([[1, 0, 0], [1, 1, 0]])
+    voxels2 = np.array([[2, 0, 0]])
+
+    region1 = ExplicitVBR(voxels1, np.eye(4))
+    region2 = ExplicitVBR(voxels2, np.eye(4))
+
+    regions = neurolang.add_tuple_set(
+        [(region1,), (region2,)], name="regions"
+    )
+
+    with neurolang.scope as e:
+        e.ans[e.v] = regions[e.r] & contains_(e.r, e.v)
+        res = neurolang.solve_all()
+
+    ans = res["ans"].to_unnamed()
+    assert len(ans) == 3
+    expected = {
+        ((1, 0, 0),),
+        ((1, 1, 0),),
+        ((2, 0, 0),),
+    }
+    assert {tuple(tuple(v) for v in row) for row in ans} == expected
+
+
+def test_neurolang_dl_region_destroy_non_region_ignored():
+    neurolang = frontend.NeurolangDL()
+    contains_ = neurolang.add_symbol(contains)
+
+    numbers = neurolang.add_tuple_set(
+        [(1,), (2,), (3,)], name="numbers"
+    )
+
+    with neurolang.scope as e:
+        e.ans[e.v] = numbers[e.n] & contains_(e.n, e.v)
+        res = neurolang.solve_all()
+
+    ans = res["ans"].to_unnamed()
+    assert len(ans) == 3
+    expected = {(1,), (2,), (3,)}
+    assert set(ans) == expected
+
+
+def test_neurolang_dl_region_destroy_tuple_edb_column():
+    neurolang = frontend.NeurolangDL()
+    contains_ = neurolang.add_symbol(contains)
+
+    numbers = neurolang.add_tuple_set(
+        [("a", (1, 2, 3))], name="numbers"
+    )
+
+    with neurolang.scope as e:
+        e.ans[e.l, e.v] = numbers[e.l, e.t] & contains_(e.t, e.v)
+        res = neurolang.solve_all()
+
+    ans = res["ans"].to_unnamed()
+    assert len(ans) == 3
+    expected = {
+        ("a", 1),
+        ("a", 2),
+        ("a", 3),
+    }
+    assert set(ans) == expected
+
+
+def test_neurolang_dl_region_destroy_multicolumn():
+    neurolang = frontend.NeurolangDL()
+    contains_ = neurolang.add_symbol(contains)
+
+    voxels1 = np.array([[1, 0, 0], [1, 1, 0]])
+    voxels2 = np.array([[2, 0, 0]])
+
+    region1 = ExplicitVBR(voxels1, np.eye(4))
+    region2 = ExplicitVBR(voxels2, np.eye(4))
+
+    regions = neurolang.add_tuple_set(
+        [("A", region1), ("B", region2)], name="regions"
+    )
+
+    with neurolang.scope as e:
+        e.ans[e.l, e.v] = regions[e.l, e.r] & contains_(e.r, e.v)
+        res = neurolang.solve_all()
+
+    ans = res["ans"].to_unnamed()
+    assert len(ans) == 3
+    expected = {
+        ("A", (1, 0, 0)),
+        ("A", (1, 1, 0)),
+        ("B", (2, 0, 0)),
+    }
+    assert {
+        (row[0], tuple(row[1])) for row in ans
+    } == expected
+
+
+def test_neurolang_dl_region_destroy_tuple_coords():
+    neurolang = frontend.NeurolangDL()
+    contains_ = neurolang.add_symbol(contains)
+
+    voxels1 = np.array([[1, 0, 0], [1, 1, 0]])
+    voxels2 = np.array([[2, 0, 0]])
+
+    region1 = ExplicitVBR(voxels1, np.eye(4))
+    region2 = ExplicitVBR(voxels2, np.eye(4))
+
+    regions = neurolang.add_tuple_set(
+        [("A", region1), ("B", region2)], name="regions"
+    )
+
+    with neurolang.scope as e:
+        e.ans[e.l, e.x, e.y, e.z] = regions[e.l, e.r] & contains_(e.r, (e.x, e.y, e.z))
+        res = neurolang.solve_all()
+
+    ans = res["ans"].to_unnamed()
+    assert len(ans) == 3
+    expected = {
+        ("A", 1, 0, 0),
+        ("A", 1, 1, 0),
+        ("B", 2, 0, 0),
+    }
+    assert set(ans) == expected
+
+
 @pytest.mark.skip
 @patch(
     "neurolang.frontend.neurosynth_utils."
@@ -906,3 +1032,32 @@ def test_numpy_mixin_adds_functions():
         assert set(res["q"]) == {
             (i, getattr(np, func)(i)) for i in np.arange(1, 10)
         }
+
+
+def test_symbol_eq_user_function_extended_projection():
+    """
+    Regression test: `e.out_var == user_func[e.in_var]` inside a scope must
+    produce an ExtendedProjection column (not a Python bool).
+
+    Before the fix, `Symbol.__eq__` returned a plain bool in logic-programming
+    mode, so the conjunction body contained True/False instead of an IR
+    equality expression, and the rule was silently dropped or raised an error.
+    """
+    nl = frontend.NeurolangDL()
+
+    terms = nl.add_tuple_set([("Hello",), ("World",)], name="terms")
+
+    @nl.add_symbol
+    def word_lower(name: str) -> str:
+        return name.lower()
+
+    with nl.scope as e:
+        e.lower_terms[e.term, e.lower] = (
+            terms[e.term] & (e.lower == word_lower[e.term])
+        )
+        res = nl.solve_all()
+
+    assert set(res["lower_terms"]) == {
+        ("Hello", "hello"),
+        ("World", "world"),
+    }

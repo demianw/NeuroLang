@@ -2,8 +2,12 @@
 
 .. currentmodule:: neurolang
 
-User Guide
-==========
+API Reference
+=============
+
+Complete API documentation for all public NeuroLang modules.
+Generated automatically from docstrings.
+
 
 End-User Frontend
 -----------------
@@ -38,6 +42,17 @@ Intermediate Language Representations
    probabilistic
    relational_algebra
    relational_algebra_provenance 
+
+
+Command-line Interface & Engine Registry
+-----------------------------------------
+
+.. autosummary::
+   :toctree: gen_api
+
+   neurolang.utils.cli
+   neurolang.utils.engine_registry
+   neurolang.utils.engines.base
 
 
 Indices and tables
