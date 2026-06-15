@@ -1,7 +1,0 @@
-neurolang.probabilistic.shattering module
-=========================================
-
-.. automodule:: neurolang.probabilistic.shattering
-   :members:
-   :undoc-members:
-   :show-inheritance:

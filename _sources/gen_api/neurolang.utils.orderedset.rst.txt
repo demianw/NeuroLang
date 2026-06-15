@@ -1,7 +1,0 @@
-neurolang.utils.orderedset module
-=================================
-
-.. automodule:: neurolang.utils.orderedset
-   :members:
-   :undoc-members:
-   :show-inheritance:

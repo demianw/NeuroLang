@@ -1,7 +1,0 @@
-neurolang.region\_solver module
-===============================
-
-.. automodule:: neurolang.region_solver
-   :members:
-   :undoc-members:
-   :show-inheritance:

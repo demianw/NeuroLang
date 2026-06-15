@@ -1,7 +1,0 @@
-neurolang.probabilistic.expression\_processing module
-=====================================================
-
-.. automodule:: neurolang.probabilistic.expression_processing
-   :members:
-   :undoc-members:
-   :show-inheritance:

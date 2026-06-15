@@ -1,7 +1,0 @@
-neurolang.frontend.drs.exceptions module
-========================================
-
-.. automodule:: neurolang.frontend.drs.exceptions
-   :members:
-   :undoc-members:
-   :show-inheritance:

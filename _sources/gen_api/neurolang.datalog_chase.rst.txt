@@ -1,7 +1,0 @@
-neurolang.datalog\_chase module
-===============================
-
-.. automodule:: neurolang.datalog_chase
-   :members:
-   :undoc-members:
-   :show-inheritance:

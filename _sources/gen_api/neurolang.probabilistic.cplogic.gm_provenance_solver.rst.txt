@@ -1,7 +1,0 @@
-neurolang.probabilistic.cplogic.gm\_provenance\_solver module
-=============================================================
-
-.. automodule:: neurolang.probabilistic.cplogic.gm_provenance_solver
-   :members:
-   :undoc-members:
-   :show-inheritance:

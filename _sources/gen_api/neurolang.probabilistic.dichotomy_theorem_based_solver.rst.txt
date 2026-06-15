@@ -1,7 +1,0 @@
-neurolang.probabilistic.dichotomy\_theorem\_based\_solver module
-================================================================
-
-.. automodule:: neurolang.probabilistic.dichotomy_theorem_based_solver
-   :members:
-   :undoc-members:
-   :show-inheritance:

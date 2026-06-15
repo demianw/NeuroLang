@@ -1,7 +1,0 @@
-neurolang.frontend.drs.english\_grammar module
-==============================================
-
-.. automodule:: neurolang.frontend.drs.english_grammar
-   :members:
-   :undoc-members:
-   :show-inheritance:

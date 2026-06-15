@@ -1,7 +1,0 @@
-neurolang.neurolang module
-==========================
-
-.. automodule:: neurolang.neurolang
-   :members:
-   :undoc-members:
-   :show-inheritance:

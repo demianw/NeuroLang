@@ -1,7 +1,0 @@
-neurolang.frontend.neurolang module
-===================================
-
-.. automodule:: neurolang.frontend.neurolang
-   :members:
-   :undoc-members:
-   :show-inheritance:

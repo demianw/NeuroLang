@@ -1,7 +1,0 @@
-neurolang.datalog.chase.general module
-======================================
-
-.. automodule:: neurolang.datalog.chase.general
-   :members:
-   :undoc-members:
-   :show-inheritance:

@@ -1,7 +1,0 @@
-neurolang.datalog.wrapped\_collections module
-=============================================
-
-.. automodule:: neurolang.datalog.wrapped_collections
-   :members:
-   :undoc-members:
-   :show-inheritance:

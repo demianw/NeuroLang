@@ -1,7 +1,0 @@
-neurolang.CD\_relations module
-==============================
-
-.. automodule:: neurolang.CD_relations
-   :members:
-   :undoc-members:
-   :show-inheritance:

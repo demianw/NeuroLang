@@ -1,7 +1,0 @@
-neurolang.frontend.datalog.natural\_syntax module
-=================================================
-
-.. automodule:: neurolang.frontend.datalog.natural_syntax
-   :members:
-   :undoc-members:
-   :show-inheritance:

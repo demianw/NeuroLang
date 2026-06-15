@@ -1,7 +1,0 @@
-neurolang.frontend.datalog.syntax\_preprocessing module
-=======================================================
-
-.. automodule:: neurolang.frontend.datalog.syntax_preprocessing
-   :members:
-   :undoc-members:
-   :show-inheritance:

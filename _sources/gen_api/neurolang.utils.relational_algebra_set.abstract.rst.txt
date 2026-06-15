@@ -1,7 +1,0 @@
-neurolang.utils.relational\_algebra\_set.abstract module
-========================================================
-
-.. automodule:: neurolang.utils.relational_algebra_set.abstract
-   :members:
-   :undoc-members:
-   :show-inheritance:

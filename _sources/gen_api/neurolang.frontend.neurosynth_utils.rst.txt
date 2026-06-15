@@ -1,7 +1,0 @@
-neurolang.frontend.neurosynth\_utils module
-===========================================
-
-.. automodule:: neurolang.frontend.neurosynth_utils
-   :members:
-   :undoc-members:
-   :show-inheritance:

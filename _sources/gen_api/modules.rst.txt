@@ -1,7 +1,0 @@
-neurolang
-=========
-
-.. toctree::
-   :maxdepth: 4
-
-   neurolang
