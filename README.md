@@ -1,0 +1,23 @@
+# NeuroLang
+
+[![Tests](https://github.com/NeuroLang/NeuroLang/actions/workflows/tests.yml/badge.svg)](https://github.com/NeuroLang/NeuroLang/actions/workflows/tests.yml)
+[![Coverage](https://raw.githubusercontent.com/NeuroLang/NeuroLang/gh-pages/coverage.svg)](https://github.com/NeuroLang/NeuroLang/actions/workflows/tests.yml)
+[![PyPI](https://img.shields.io/pypi/v/neurolang.svg)](https://pypi.org/project/neurolang/)
+[![Python](https://img.shields.io/pypi/pyversions/neurolang.svg)](https://pypi.org/project/neurolang/)
+[![Code style](https://img.shields.io/badge/code%20style-flake8-000000.svg)](https://github.com/PyCQA/flake8)
+
+
+NeuroLang enables the analysis of neuroimaging data through probabilistic logic programming. It seamlessly combines images, databases, and ontologies within a single framework.
+
+
+Important links
+===============
+- Official source code repo: https://github.com/Neurolang/Neurolang/
+- In-development interactive gallery of examples (best viewed with Chrome) http://neurolang-u18.saclay.inria.fr/hub/gallery
+- HTML documentation (stable release): http://neurolang.github.io/
+- HTML documentation (dev release): http://neurolang.github.io/dev
+
+Citing
+======
+G. E. Zanitti, Y. Soto, V. Iovene, M. V. Martinez, R. O. Rodriguez, G. I. Simari, D. Wassermann. *Scalable Query Answering Under Uncertainty to Neuroscientific Ontological Knowledge: The NeuroLang Approach*. Neuroinformatics, 21(2), 407-425, 2023.
+

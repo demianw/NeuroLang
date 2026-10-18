@@ -1,0 +1,27 @@
+{
+    "version": 1,
+    "project": "NeuroLang",
+    "project_url": "https://github.com/NeuroLang/NeuroLang",
+    "repo": ".",
+    "show_commit_url": "https://github.com/NeuroLang/NeuroLang/commit/",
+    "branches": ["master"],
+    "pythons": ["3.14"],
+    "environment_type": "virtualenv",
+    "matrix": {
+        "polars": [""],
+        "pyarrow": [""]
+    },
+    "build_command": [
+        "python -m pip install build",
+        "python -m build --wheel -o {build_cache_dir} {build_dir}"
+    ],
+    "install_command": [
+        "python -m pip install {wheel_file} --force-reinstall"
+    ],
+    "uninstall_command": [
+        "return-code=any python -m pip uninstall -y {project}"
+    ],
+    "env_dir": ".asv/env",
+    "results_dir": ".asv/results",
+    "html_dir": ".asv/html"
+}

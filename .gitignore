@@ -1,0 +1,171 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.isort.cfg
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+doc/_build
+doc/auto_examples
+doc/gen_api
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# celery beat schedule file
+celerybeat-schedule
+
+# SageMath parsed files
+*.sage.py
+
+# dotenv
+.env
+
+# virtualenv
+.venv
+venv/
+ENV/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+
+#
+/scratch_notebooks
+
+# jetbrains IDE
+.idea/*
+
+# local vimrc plugin
+.lvimrc
+
+
+# tags
+tags
+
+# pytest cache directory
+.pytest_cache/
+
+# pytest profiling results directory
+prof/
+
+# other
+scratch
+.scannerwork
+.vscode
+*orig
+utest.xml
+*prof
+.asv
+neurolang/frontend/neurosynth_data/
+neurolang_data
+*scratch*
+experiments
+*_old*
+**/data
+cov.xml
+deploy_key*
+
+#coding assistants
+superpowers
+.claude
+.factory
+.opencode
+CLAUDE.md
+
+# worktrees
+.worktrees/
+setup.cfg
+
+# internal dev artifacts (not for PR)
+.omo/
+.sisyphus/
+AGENTS.md
+ANALYSIS_SUMMARY.md
+PROBABILISTIC_FACTS_INDEX.md
+PROBABILISTIC_FACTS_QUICK_REFERENCE.md
+PROBABILISTIC_FACTS_TEST_EXAMPLES.md
+VAL-PROB-contracts.md
+WEIGHTED_PROBABILISTIC_FACTS_REPORT.md
+doc/SQUALL_REVIEW.md
+doc/sg_execution_times.rst
+docs/superpowers/
+neurolang/_version_scm.py
+neurolang/utils/server/neurolang-sparklis/
+
+# uv package manager
+uv.lock
+.omo/
