@@ -27,3 +27,23 @@ top 5% of voxels 0.807 / 0.807; the two selections' maps correlate at 0.98.
 Hippocampus: mean ratio 1.13-1.32, maximum 2.4-2.8, below the 2.66 threshold
 (the basal ganglia and the thalamus reach 3.4-4.5). The numbers were checked
 against an independent numpy computation of the same selection.
+
+## Comparison with the TF-IDF of the term only
+
+The same uniformity test (whole brain, 2 mm grid, same 3-voxel radius) with the
+studies selected by the TF-IDF of the term `working memory` in the
+`neurostore` engine (computed from the abstracts; 2,111 studies have a value
+above 0.001, 2,031 above 0.03), instead of by SPECTER2:
+
+| selection | map | r with SPECTER2 top 5% | Dice (top 5% voxels) |
+|---|---|---|---|
+| TF-IDF > 0.001 (2,111) | `uniformity_working_memory_tfidf_gt0.001.nii.gz` | 0.945 | 0.807 |
+| TF-IDF > 0.03 = `mentions` (2,031) | `uniformity_working_memory_term_mentions.nii.gz` | 0.945 | 0.807 |
+| top 1,794 by TF-IDF | `uniformity_working_memory_tfidf_top1794.nii.gz` | 0.942 | 0.805 |
+| top 897 by TF-IDF | `uniformity_working_memory_tfidf_top897.nii.gz` | 0.915 | 0.772 |
+
+Only 497 of the 1,794 SPECTER2 studies (and 233 of the top 897 by TF-IDF) are
+among the 2,111 studies with the term, yet the maps agree: the extra studies
+activate the same network. `glass_specter2_vs_tfidf.png` shows both maps and
+their difference: it stays within -2.4 and +1.9 ratio units, with 2,764
+voxels beyond ±1.
