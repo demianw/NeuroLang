@@ -47,3 +47,45 @@ among the 2,111 studies with the term, yet the maps agree: the extra studies
 activate the same network. `glass_specter2_vs_tfidf.png` shows both maps and
 their difference: it stays within -2.4 and +1.9 ratio units, with 2,764
 voxels beyond ±1.
+
+## Four approaches: NeuroStore and Neurosynth, TF-IDF and SPECTER2
+
+The same uniformity test on the Neurosynth dataset (14,371 studies, its own
+TF-IDF vocabulary; abstracts from PubMed embedded with the same SPECTER2
+model and the same Cognitive Atlas definition query), compared with the
+NeuroStore maps above.
+
+| approach | studies | map |
+|---|---|---|
+| NeuroStore, TF-IDF > 0.001 | 2,111 | `..._tfidf_gt0.001` |
+| NeuroStore, SPECTER2 top 5% | 1,794 | `..._top5` |
+| Neurosynth, TF-IDF > 0.001 | 1,091 | `..._neurosynth_tfidf_gt0.001` |
+| Neurosynth, SPECTER2 top 5% | 719 | `..._neurosynth_specter2_top5` |
+
+(`..._neurosynth_tfidf_gt0.03`, `..._neurosynth_tfidf_top5pct`,
+`..._neurosynth_tfidf_top2p5pct` and `..._neurosynth_specter2_top2p5` are the
+other selections.)
+
+Pearson r (Dice of the top 5% of voxels) between the maps:
+
+| | NeuroStore TF-IDF | NeuroStore SPECTER2 | Neurosynth TF-IDF | Neurosynth SPECTER2 |
+|---|---|---|---|---|
+| NeuroStore TF-IDF | | 0.945 (0.807) | 0.977 (0.896) | 0.918 (0.782) |
+| NeuroStore SPECTER2 | 0.945 (0.807) | | 0.930 (0.796) | 0.957 (0.844) |
+| Neurosynth TF-IDF | 0.977 (0.896) | 0.930 (0.796) | | 0.919 (0.789) |
+| Neurosynth SPECTER2 | 0.918 (0.782) | 0.957 (0.844) | 0.919 (0.789) | |
+
+The same selection method on the two databases agrees more (0.977 for TF-IDF,
+0.957 for SPECTER2) than the two methods on the same database (0.945 and
+0.919). The studies of the TF-IDF and SPECTER2 selections barely overlap
+(497 of 1,794 in NeuroStore, 233 of 719 in Neurosynth). The strongest voxels
+are in the paracingulate gyrus and the insular cortex for all four.
+Hippocampus: mean ratio 1.22 to 1.28; its maximum is 2.3 to 2.5 for three
+approaches and 2.98 (one voxel above the 2.80 threshold of the map) for
+Neurosynth SPECTER2, which has the fewest studies.
+
+Neurosynth and NeuroStore are not independent: both come from the
+literature, and their studies overlap (not measured here).
+
+`glass_four_approaches.png` and `agreement_four_approaches.png` show the
+maps and the agreement.
