@@ -36,9 +36,20 @@ Unreleased
   uniformity tests, as predicates: ``uniformity('working memory', i, j, k, u)``,
   ``lift``, ``relative_risk`` and ``ratios`` (over the whole brain, with a new
   ``selected_voxel`` choice); see :ref:`tutorial-neurosynth-tests`.
+* The MNI image of an engine can come from nilearn (bundled with it) or
+  TemplateFlow (``mni_template``), with a default ``resolution`` for the
+  engine and ``${resolution}`` placeholders fed by the command-line
+  ``--resolution``; the engines of a custom YAML file can extend the built-in
+  ones.
+* Free-text meta-analytic queries: the gallery example
+  ``plot_cognitive_atlas_uniformity.py`` selects the studies close to the
+  Cognitive Atlas definition of a term with SPECTER2 and computes their
+  uniformity map, and :file:`experiments/text_meta_analysis` evaluates
+  SPECTER2 queries without the vocabulary term against the maps of the
+  Neurosynth terms.
 * ``neurosynth`` and ``neurostore`` load the Cognitive Atlas ontology
-  (``ontologies``, now loaded before ``datalog_init``) for open-world queries
-  over its concepts, tasks and contrasts, joined with the studies through
+  (``ontologies``, before ``datalog_init``) for open-world queries over its
+  concepts, tasks and contrasts, joined with the studies through
   ``cogat_subclass_of``, ``cogat_measures`` and ``cogat_term``; see
   :doc:`tutorial_cognitive_atlas`.
 * The ``.view`` viewer has the controls of NiiVue's display: the view
