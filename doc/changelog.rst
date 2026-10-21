@@ -19,6 +19,10 @@ Unreleased
 
 **New features:**
 
+* The engine of the REPL in the browser leaves out the precomputed analyses
+  (``lift``, ``relative_risk``, ``uniformity``, ``ratios``): building them took
+  almost 4 GB, which Safari does not give a tab, and made the page loop on
+  "Building the engine". The page builds them with ``?engine=full``.
 * The AI assistant writes Datalog annotated with ``%`` comments, a line before
   each rule saying what it computes, and its examples are annotated. The page of
   the REPL in the browser has a light, dark or computer's theme switch, and shows
