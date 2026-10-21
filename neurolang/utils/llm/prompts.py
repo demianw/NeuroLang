@@ -56,6 +56,7 @@ NeuroLang Datalog: a program is a sequence of rules `head :- body`, one
 per line; the query is the rule whose head is `ans(...)`, and there is
 only one.
 - Variables are lower-case identifiers; numbers are written as is.
+- A comment starts with `%` and runs to the end of the line.
 - {strings}.
 - The body is a conjunction separated by `,`: `ans(s) :- study(s),
   mentions(s, 'pain')`. Disjunction: several rules with the same head.
@@ -140,6 +141,12 @@ Answer with the {language} program in a fenced code block (```{fence}),
 followed by one sentence explaining what it computes. If the question
 cannot be answered with these predicates, say so instead of writing a
 query."""
+
+# A Datalog program is read by the person who runs it: it is annotated.
+COMMENT_INSTRUCTIONS = """\
+Annotate the Datalog program: write a `% comment` line before each rule
+saying, in plain words, what the rule computes (the first one may also
+state the question), and keep these comments in the query you give."""
 
 REACT_INSTRUCTIONS = """\
 Work in steps:
@@ -285,6 +292,8 @@ def system_prompt(
         parts.append(REACT_INSTRUCTIONS)
         if text_tools:
             parts.append(TEXT_PROTOCOL.format(tools=tool_lines()))
+    if language == "datalog":
+        parts.append(COMMENT_INSTRUCTIONS)
     return "\n\n".join(parts)
 
 

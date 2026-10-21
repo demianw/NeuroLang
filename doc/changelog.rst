@@ -19,6 +19,10 @@ Unreleased
 
 **New features:**
 
+* The AI assistant writes Datalog annotated with ``%`` comments, a line before
+  each rule saying what it computes, and its examples are annotated. The page of
+  the REPL in the browser has a light, dark or computer's theme switch, and shows
+  how long a slow step lasts.
 * The page of the REPL in the browser is a small interface: a box to ask
   the AI assistant, a box for the Datalog or SQUALL code with its history
   in a dropdown, and the result as a table or in the brain viewer.

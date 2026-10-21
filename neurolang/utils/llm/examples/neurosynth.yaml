@@ -5,50 +5,71 @@
 examples:
   - question: Which studies mention pain?
     squall: obtain every Study that mentions 'pain'.
-    datalog: ans(s) :- mentions(s, 'pain')
+    datalog: |-
+      % the studies that mention pain
+      ans(s) :- mentions(s, 'pain')
 
   - question: List the terms of the vocabulary.
     squall: obtain every Term.
-    datalog: ans(t) :- term(t)
+    datalog: |-
+      % every term of the vocabulary
+      ans(t) :- term(t)
 
   - question: Which terms are mentioned by at least one study?
     squall: obtain every Term that a Study mentions.
-    datalog: ans(t) :- mentions(s, t)
+    datalog: |-
+      % the terms that some study mentions
+      ans(t) :- mentions(s, t)
 
   - question: Which voxels are reported by studies that mention pain?
     squall: obtain every Voxel (?i; ?j; ?k) that a Study that mentions 'pain' reports.
-    datalog: ans(i, j, k) :- mentions(s, 'pain'), reports(s, i, j, k)
+    datalog: |-
+      % the voxels reported by the studies that mention pain
+      ans(i, j, k) :- mentions(s, 'pain'), reports(s, i, j, k)
 
   - question: Which studies mention either language or speech?
     squall: obtain every Study that mentions 'language' or mentions 'speech'.
     datalog: |-
+      % the studies that mention language, or speech
       language_or_speech(s) :- mentions(s, 'language')
       language_or_speech(s) :- mentions(s, 'speech')
+      % the answer: those studies
       ans(s) :- language_or_speech(s)
 
   - question: Which studies mention both pain and emotion?
     datalog: |-
+      % the studies with a TF-IDF weight above 0.03 for both terms
       ans(s) :- term_in_study_tfidf(s, 'pain', v), term_in_study_tfidf(s, 'emotion', w), (v > 0.03), (w > 0.03)
 
   - question: Which studies do not mention pain?
-    datalog: ans(s) :- study(s), ~mentions(s, 'pain')
+    datalog: |-
+      % the studies, but those that mention pain
+      ans(s) :- study(s), ~mentions(s, 'pain')
 
   - question: Give the TF-IDF weight of the term reward in each study where it is above 0.1.
     squall: obtain every Weighted_mention (?s; ?t; ?w) such that ?t is 'reward' and ?w is greater than 0.1.
-    datalog: ans(s, w) :- weighted_mention(s, 'reward', w), (w > 0.1)
+    datalog: |-
+      % the studies with their weight of reward, when above 0.1
+      ans(s, w) :- weighted_mention(s, 'reward', w), (w > 0.1)
 
   - question: Which terms does the study 10022492 mention?
     squall: obtain every Term that 10022492 mentions.
-    datalog: ans(t) :- mentions(10022492, t)
+    datalog: |-
+      % the terms that the study 10022492 mentions
+      ans(t) :- mentions(10022492, t)
 
   - question: Which terms co-occur with fear in a study?
     squall: obtain every Term that a Study that mentions 'fear' mentions.
-    datalog: ans(t) :- mentions(s, 'fear'), mentions(s, t)
+    datalog: |-
+      % the terms that a study that mentions fear also mentions
+      ans(t) :- mentions(s, 'fear'), mentions(s, t)
 
   - question: How many studies are there?
     squall: obtain every Count of the Study.
     datalog: |-
+      % the number of studies
       study_count(n) :- AGGREGATE[](study(s) @ count(s)) = n
+      % the answer: the number of studies
       ans(n) :- study_count(n)
 
   - question: How many studies mention each term?
@@ -57,17 +78,23 @@ examples:
           where every Count of the Study that mentions the Term.
       obtain every Term_study_count.
     datalog: |-
+      % for each term, the number of studies that mention it
       term_study_count(t, n) :- AGGREGATE[t](mentions(s, t) @ count(s)) = n
+      % the answer: each term with its number of studies
       ans(t, n) :- term_study_count(t, n)
 
   - question: How many terms does each study mention?
     datalog: |-
+      % for each study, the number of terms it mentions
       study_term_count(s, n) :- AGGREGATE[s](mentions(s, t) @ count(t)) = n
+      % the answer: each study with its number of terms
       ans(s, n) :- study_term_count(s, n)
 
   - question: What is the highest TF-IDF weight of the term attention?
     datalog: |-
+      % the highest TF-IDF weight of the term attention
       attention_max(m) :- AGGREGATE[](weighted_mention(s, 'attention', w) @ max(w)) = m
+      % the answer: the highest weight
       ans(m) :- attention_max(m)
 
   - question: Define the studies about faces, then list the voxels they report.
@@ -75,7 +102,9 @@ examples:
       define as Face_study every Study that mentions 'face'.
       obtain every Voxel (?i; ?j; ?k) that a Face_study reports.
     datalog: |-
+      % the studies that mention face
       face_study(s) :- mentions(s, 'face')
+      % the voxels that these studies report
       ans(i, j, k) :- face_study(s), reports(s, i, j, k)
 
   - question: What is the probability that a voxel is reported, given that the study mentions auditory?
@@ -87,8 +116,11 @@ examples:
           conditioned to every Term_association (?s; ?t; _) such that ?t is 'auditory'.
       obtain every Activation_given_term (?i; ?j; ?k; ?p).
     datalog: |-
+      % the peaks reported by the selected studies
       activation(i, j, k, s) :- peak_reported(i, j, k, s), selected_study(s)
+      % the terms mentioned by the selected studies
       term_association(s, t) :- mentions(s, t), selected_study(s)
+      % the probability of each voxel, given that the study mentions auditory
       ans(i, j, k, p) :- PROB[activation(i, j, k, s) // term_association(s, 'auditory')] = p
 
   - question: What is the probability that a study mentions each term?
@@ -97,7 +129,9 @@ examples:
       define as Term_probability with inferred probability every Mentioned_term.
       obtain every Term_probability (?t; ?p).
     datalog: |-
+      % the terms mentioned by a selected study
       mentioned_term(t) :- selected_study(s), mentions(s, t)
+      % the probability that a study mentions each term
       ans(t, p) :- PROB[mentioned_term(t)] = p
 
   # Euclidean distances: voxels are indices of the 1 mm MNI grid, the MNI
@@ -106,7 +140,9 @@ examples:
   # is the voxel (74, 130, 52).
   - question: Which studies report an activation within 6 mm of the left amygdala, MNI (-24, -4, -20)?
     squall: obtain every Study that reports a Voxel (?i; ?j; ?k) such that euclidean(?i, ?j, ?k, 74, 130, 52) is lower than 6.
-    datalog: ans(s) :- reports(s, i, j, k), (euclidean(i, j, k, 74, 130, 52) < 6)
+    datalog: |-
+      % the studies with a peak within 6 mm of the voxel (74, 130, 52), the left amygdala
+      ans(s) :- reports(s, i, j, k), (euclidean(i, j, k, 74, 130, 52) < 6)
 
   - question: Which terms are mentioned by more than 50 of the studies activating within 6 mm of the voxel (74, 130, 52), and by how many?
     squall: |-
@@ -114,22 +150,33 @@ examples:
       define as Roi_term_count for every Term ; where every Count of the Roi_study that mentions the Term.
       obtain every Roi_term_count (?t; ?n) such that ?n is greater than 50.
     datalog: |-
+      % the studies that report a peak within the distance of the voxel, in mm
       roi_study(s) :- reports(s, i, j, k), (euclidean(i, j, k, 74, 130, 52) < 6)
+      % the terms that those studies mention
       roi_term(t, s) :- roi_study(s), mentions(s, t)
+      % for each term, how many of those studies mention it
       term_count(t, n) :- AGGREGATE[t](roi_term(t, s) @ count(s)) = n
+      % the terms of more than 50 of those studies, with their number
       ans(t, n) :- term_count(t, n), (n > 50)
 
   - question: How many studies report each voxel within 5 mm of the MNI point (-24, -4, -20)?
     datalog: |-
+      % the peaks within 5 mm of the voxel, with their study
       near_peak(i, j, k, s) :- reports(s, i, j, k), (euclidean(i, j, k, 74, 130, 52) < 5)
+      % for each voxel, how many studies report it near the point
       voxel_count(i, j, k, n) :- AGGREGATE[i, j, k](near_peak(i, j, k, s) @ count(s)) = n
+      % the answer: the voxels with their number of studies
       ans(i, j, k, n) :- voxel_count(i, j, k, n)
 
   - question: What is the probability that a study activates within 10 mm of the left amygdala, voxel (74, 130, 52), given that it mentions fear?
     datalog: |-
+      % the studies that report a peak within the distance of the voxel, in mm
       roi_study(s) :- reports(s, i, j, k), (euclidean(i, j, k, 74, 130, 52) < 10)
+      % the selected studies that activate the region
       active_roi(s) :- roi_study(s), selected_study(s)
+      % the terms mentioned by the selected studies
       term_association(s, t) :- mentions(s, t), selected_study(s)
+      % the probability of activating the region, given that the study mentions fear
       ans(p) :- PROB[active_roi(s) // term_association(s, 'fear')] = p
 
   # Bayes factors (reverse inference): BF = P(T | R) / P(T | not R)
@@ -152,14 +199,23 @@ examples:
           and ?bf is (?p_rt / ?p_r) / ((?p_t - ?p_rt) / (1.0 - ?p_r)).
       obtain every Bayes_factor (?r; ?t; ?bf) such that ?bf is greater than 3.16.
     datalog: |-
+      % the studies that report a peak within the distance of the voxel, in mm
       roi_study(s) :- reports(s, i, j, k), (euclidean(i, j, k, 74, 130, 52) < 10)
+      % the selected studies that activate the region
       active_roi(s) :- selected_study(s), roi_study(s)
+      % the terms mentioned by a selected study
       mentioned_term(t) :- selected_study(s), mentions(s, t)
+      % the terms mentioned by the selected studies that activate the region
       cooccurrence(t, s) :- selected_study(s), roi_study(s), mentions(s, t)
+      % P(R): the probability that a selected study activates the region
       roi_probability(p_r) :- PROB[active_roi(s)] = p_r
+      % P(T): the probability that a selected study mentions the term
       term_probability(t, p_t) :- PROB[mentioned_term(t)] = p_t
+      % P(R, T): the probability of both
       joint_probability(t, p_rt) :- PROB[cooccurrence(t, s)] = p_rt
+      % the Bayes factor of each term for the region
       bayes_factor(t, bf) :- joint_probability(t, p_rt), roi_probability(p_r), term_probability(t, p_t), (bf == (p_rt / p_r) / ((p_t - p_rt) / (1.0 - p_r)))
+      % the terms with a Bayes factor above 3.16, substantial evidence
       ans(t, bf) :- bayes_factor(t, bf), (bf > 3.16)
 
   - question: What is the Bayes factor of the term fear for activations within 10 mm of the voxel (74, 130, 52)?
@@ -178,12 +234,21 @@ examples:
           and ?bf is (?p_rt / ?p_r) / ((?p_t - ?p_rt) / (1.0 - ?p_r)).
       obtain every Bayes_factor (?r; ?t; ?bf) such that ?t is 'fear'.
     datalog: |-
+      % the studies that report a peak within the distance of the voxel, in mm
       roi_study(s) :- reports(s, i, j, k), (euclidean(i, j, k, 74, 130, 52) < 10)
+      % the selected studies that activate the region
       active_roi(s) :- selected_study(s), roi_study(s)
+      % the terms mentioned by a selected study
       mentioned_term(t) :- selected_study(s), mentions(s, t)
+      % the terms mentioned by the selected studies that activate the region
       cooccurrence(t, s) :- selected_study(s), roi_study(s), mentions(s, t)
+      % P(R): the probability that a selected study activates the region
       roi_probability(p_r) :- PROB[active_roi(s)] = p_r
+      % P(T): the probability that a selected study mentions the term
       term_probability(t, p_t) :- PROB[mentioned_term(t)] = p_t
+      % P(R, T): the probability of both
       joint_probability(t, p_rt) :- PROB[cooccurrence(t, s)] = p_rt
+      % the Bayes factor of each term for the region
       bayes_factor(t, bf) :- joint_probability(t, p_rt), roi_probability(p_r), term_probability(t, p_t), (bf == (p_rt / p_r) / ((p_t - p_rt) / (1.0 - p_r)))
+      % the Bayes factor of fear
       ans(bf) :- bayes_factor('fear', bf)

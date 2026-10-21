@@ -85,3 +85,13 @@ def test_bank_queries_are_valid_on_the_engine(engine):
                     f"{example.question} [{language}]: {result.message}"
                 )
     assert not failures, "\n".join(failures)
+
+
+def test_the_datalog_examples_are_annotated_with_comments():
+    from ..examples import load_examples
+
+    plain = [
+        e.question for e in load_examples("neurosynth")
+        if "datalog" in e.queries and "%" not in e.query("datalog")
+    ]
+    assert not plain
