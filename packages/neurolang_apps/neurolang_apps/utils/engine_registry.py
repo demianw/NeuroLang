@@ -1171,6 +1171,7 @@ def _register_atlas_activation(
     ]
     nl.add_probabilistic_facts_from_tuples(prob_facts, name=f"{name}_prob")
 
+
 def _load_deterministic_atlas(
     nl, atlas_name: str, params: dict, data_dir: Path
 ) -> None:
