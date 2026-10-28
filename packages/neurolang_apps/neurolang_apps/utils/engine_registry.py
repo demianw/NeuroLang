@@ -1145,16 +1145,31 @@ def _register_atlas_activation(
     each region of the atlas (see :func:`atlas_activation`), from the
     peaks in millimetres of the relation ``peaks`` (``x, y, z, study``),
     ``peak_mni`` by default, within ``radius_mm`` (3 by default).
+
+    Also registers ``{predicate_name}_prob(label)``, a probabilistic
+    fact for each region: its probability is that of a uniformly chosen
+    study (``selected_study``) activating it, i.e. the fraction of all
+    studies activating the region.
     """
     peaks = _relation_frame(nl, settings.get("peaks", "peak_mni"))
+    studies = peaks.iloc[:, 3].to_numpy()
     pairs = atlas_activation(
         img, labels, peaks.iloc[:, :3].to_numpy(dtype=float),
-        peaks.iloc[:, 3].to_numpy(), float(settings.get("radius_mm", 3)),
+        studies, float(settings.get("radius_mm", 3)),
     )
     name = settings.get("predicate_name", f"{pred_name}_activated")
     nl.add_tuple_set(pairs, name=name)
     nl.symbol_table[name].value.might_have_duplicates = False
 
+    n_studies = len(set(studies.tolist()))
+    activating_studies = {}
+    for label, study in pairs:
+        activating_studies.setdefault(label, set()).add(study)
+    prob_facts = [
+        (len(label_studies) / n_studies, label)
+        for label, label_studies in activating_studies.items()
+    ]
+    nl.add_probabilistic_facts_from_tuples(prob_facts, name=f"{name}_prob")
 
 def _load_deterministic_atlas(
     nl, atlas_name: str, params: dict, data_dir: Path

@@ -609,7 +609,10 @@ class TestNeurosynthDeclarations:
 
         assert engine_registry.get_probabilistic_predicates(
             "neurosynth"
-        ) == {"selected_study", "selected_voxel"}
+        ) == {
+            "selected_study", "selected_voxel", "schaefer_activated_prob",
+            "destrieux_activated_prob", "tian_activated_prob",
+        }
 
 
 class TestPredicateArguments:

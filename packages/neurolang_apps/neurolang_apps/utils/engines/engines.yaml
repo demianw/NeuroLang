@@ -487,6 +487,13 @@ engines:
         arguments:
           - label
           - study
+      schaefer_activated_prob:
+        description: >-
+          Probability, under a uniformly chosen study, that a Schaefer
+          parcel is activated (fraction of all studies activating it)
+        probability: true
+        arguments:
+          - label
       destrieux:
         description: >-
           Destrieux 2009 cortical atlas (gyri and sulci): region name and
@@ -501,6 +508,13 @@ engines:
         arguments:
           - destrieux_label
           - study
+      destrieux_activated_prob:
+        description: >-
+          Probability, under a uniformly chosen study, that a Destrieux
+          region is activated (fraction of all studies activating it)
+        probability: true
+        arguments:
+          - destrieux_label
       tian:
         description: >-
           Tian 2020 subcortical atlas, scale 2 (32 regions): region name and
@@ -515,6 +529,14 @@ engines:
         arguments:
           - tian_label
           - study
+      tian_activated_prob:
+        description: >-
+          Probability, under a uniformly chosen study, that a Tian
+          subcortical region is activated (fraction of all studies
+          activating it)
+        probability: true
+        arguments:
+          - tian_label
       peak_mni:
         description: >-
           Reported activation peaks in MNI coordinates, in millimetres
