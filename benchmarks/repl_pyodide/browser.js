@@ -3,6 +3,7 @@
 //
 //   node browser.js queries BROWSER SITE_DIR QUERIES.json OUT.json [REPEATS]
 //   node browser.js micro BROWSER OUT.json
+//   node browser.js profile BROWSER SITE_DIR OUT.json   (phases of the engine build)
 //
 // BROWSER is chromium, firefox or webkit (Playwright's). SITE_DIR is the
 // directory of the page with its bundle (see README.md). The page is served
@@ -45,6 +46,60 @@ async function micro(browserName, out) {
   fs.writeFileSync(out, JSON.stringify({ browser: browserName, version: browser.version(), ...result }, null, 1));
   console.log(browserName, browser.version(), JSON.stringify(result));
   await browser.close();
+}
+
+// The packages the page's worker loads, as worker.js does.
+const PYODIDE_PACKAGES = ["numpy", "scipy", "pandas", "scikit-learn", "matplotlib", "lxml", "requests", "joblib", "pyyaml", "packaging", "micropip"];
+const PYPI_PACKAGES = ["lark", "typing_inspect", "rdflib", "nibabel", "rich", "prompt_toolkit", "httpx"];
+
+// Time the phases of building the engine in Pyodide, with profile_build.py.
+async function profile(browserName, site, out) {
+  const server = await serve(site);
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const browser = await BROWSERS[browserName].launch();
+  const page = await browser.newPage();
+  await page.goto(`${base}/bundle.json`);
+  await page.addScriptTag({ url: `${PYODIDE}pyodide.js` });
+  const source = fs.readFileSync(path.join(__dirname, "profile_build.py"), "utf8");
+  const started = Date.now();
+  const steps = [];
+  const lines = await page.evaluate(async ({ base, indexURL, source, packages, pypi }) => {
+    const times = [];
+    const mark = (what) => times.push([performance.now(), what]);
+    mark("start");
+    const py = await loadPyodide({ indexURL });
+    mark("pyodide loaded");
+    await py.loadPackage(packages);
+    mark("numpy, scipy, pandas, scikit-learn loaded");
+    const bundle = await (await fetch(`${base}/bundle.json`)).json();
+    const micropip = py.pyimport("micropip");
+    for (const name of pypi) await micropip.install(name);
+    await micropip.install.callKwargs("nilearn", { deps: false });
+    mark("PyPI packages installed");
+    for (const wheel of bundle.wheels) {
+      py.FS.writeFile(`/tmp/${wheel}`, new Uint8Array(await (await fetch(`${base}/${wheel}`)).arrayBuffer()));
+      await micropip.install.callKwargs(`emfs:/tmp/${wheel}`, { deps: false });
+    }
+    mark("NeuroLang wheels installed");
+    const data = new Uint8Array(await (await fetch(`${base}/${bundle.data}`)).arrayBuffer());
+    py.FS.mkdirTree("/data");
+    py.unpackArchive(data, "zip", { extractDir: "/data" });
+    mark("data unpacked");
+    const lines = [];
+    py.setStdout({ batched: (line) => lines.push(line) });
+    py.setStderr({ batched: () => {} });
+    py.globals.set("profile_source", source);
+    py.runPython(`import sys\nsys.argv = ["profile_build.py", "/data"]\nexec(compile(profile_source, "profile_build.py", "exec"), {"__name__": "__main__"})`);
+    mark("engine built");
+    lines.push("SETUP " + JSON.stringify(times.map(([t, w], i) => [w, i ? Math.round((t - times[i - 1][0]) / 100) / 10 : 0])));
+    return lines;
+  }, { base, indexURL: PYODIDE, source, packages: PYODIDE_PACKAGES, pypi: PYPI_PACKAGES });
+  const text = lines.filter((l) => !l.startsWith("SETUP")).join("\n");
+  const setup = JSON.parse(lines.find((l) => l.startsWith("SETUP")).slice(6));
+  fs.writeFileSync(out, JSON.stringify({ browser: browserName, version: browser.version(), "total s": (Date.now() - started) / 1000, setup, build: text }, null, 1));
+  console.log(browserName, "total", ((Date.now() - started) / 1000).toFixed(0), "s\nsetup (s per step):", JSON.stringify(setup), "\n" + text);
+  await browser.close();
+  server.close();
 }
 
 async function queries(browserName, site, queriesFile, out, repeats) {
@@ -101,5 +156,7 @@ async function queries(browserName, site, queriesFile, out, repeats) {
 }
 
 const [mode, browserName, ...rest] = process.argv.slice(2);
-(mode === "micro" ? micro(browserName, rest[0]) : queries(browserName, rest[0], rest[1], rest[2], Number(rest[3] ?? 1)))
+(mode === "micro" ? micro(browserName, rest[0])
+  : mode === "profile" ? profile(browserName, rest[0], rest[1])
+    : queries(browserName, rest[0], rest[1], rest[2], Number(rest[3] ?? 1)))
   .catch((error) => { console.error(error); process.exit(1); });

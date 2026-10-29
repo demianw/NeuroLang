@@ -2,6 +2,7 @@
 # Run one part of the benchmark and write its JSON in $OUT (default /tmp/bench).
 #
 #   ./run_all.sh micro-native | micro BROWSER | native | queries BROWSER
+#                | profile-native | profile BROWSER  (phases of the engine build)
 #
 # Environment: SITE is the REPL page with its bundle (default /tmp/repl_site),
 # PY a Python with NeuroLang's dependencies, NODE_PATH where Playwright is.
@@ -24,5 +25,7 @@ case "$1" in
   queries)
     repeats=1; [ "$2" = chromium ] && repeats=2
     node "$HERE/browser.js" queries "$2" "$SITE" "$OUT/queries.json" "$OUT/queries_$2.json" $repeats ;;
-  *) echo "usage: $0 micro-native | micro BROWSER | native | queries BROWSER"; exit 2 ;;
+  profile-native) "$PY" "$HERE/profile_build.py" > "$OUT/profile_native.txt" ;;
+  profile) node "$HERE/browser.js" profile "$2" "$SITE" "$OUT/profile_$2.json" ;;
+  *) echo "usage: $0 micro-native | micro BROWSER | native | queries BROWSER | profile-native | profile BROWSER"; exit 2 ;;
 esac

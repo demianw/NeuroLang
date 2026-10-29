@@ -42,6 +42,25 @@ data zip is 29.5 MB) besides Pyodide and its packages.
 Versions differ: native numpy 1.26.4 and pandas 3.0.6, Pyodide numpy 2.4.6 and
 pandas 3.0.2.
 
+## Where the startup goes (`./run_all.sh profile-native | profile BROWSER`)
+
+Building the engine, phase by phase (`profile_build.py`), natively and in
+Pyodide (Chromium), seconds:
+
+| phase of `build_engine` | native | Pyodide |
+|---|---|---|
+| `_phase_atlases` (3 atlases, `atlas_activation`) | 47.5 | 98.9 |
+| `_phase_ontologies` (Cognitive Atlas OWL) | 3.1 | 4.3 |
+| `_phase_python_init` | 1.9 | 2.6 |
+| the rest | 3.0 | 6.3 |
+| total | 55.5 | 112.1 |
+
+The page also takes, in Pyodide on a local server: 1.9 s to load Pyodide, 3.6 s
+the numpy/scipy/pandas/scikit-learn packages, 1.7 s the PyPI packages, 0.5 s the
+wheels and the data. `atlas_activation` finds, for each of the 447 000 peaks, the
+voxels of the atlas within 3 mm in a cube of 343 candidates, for each atlas, at
+every start: 15 s per atlas natively, and its result never changes.
+
 ## Caveats
 
 - One machine. Nothing here was measured on another CPU, a phone or a different

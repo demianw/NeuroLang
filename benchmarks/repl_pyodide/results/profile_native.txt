@@ -1,0 +1,17 @@
+[fetch_icbm152_2009] Dataset directory found: /Users/bot/neurolang_data/icbm/icbm152_2009
+[fetch_atlas_destrieux_2009] Dataset directory found: /Users/bot/neurolang_data/neurosynth/destrieux_2009
+[fetch_atlas_schaefer_2018] Dataset directory found: /Users/bot/neurolang_data/neurosynth/schaefer_2018
+
+build_engine: 56.6 s
+    48.7 s    86%  _phase_atlases
+     3.2 s     6%  _phase_ontologies
+     1.9 s     3%  _phase_python_init
+     0.3 s     0%  _phase_resamplings
+     0.1 s     0%  _phase_datalog_init
+     0.0 s     0%  _phase_text_embeddings
+     0.0 s     0%  _phase_base_symbols
+     0.0 s     0%  _phase_builtins
+     0.0 s     0%  _phase_downloads
+     0.0 s     0%  _phase_relations
+     0.0 s     0%  _phase_templates
+     0.0 s     0%  _phase_probabilistic_choices
