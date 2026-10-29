@@ -108,6 +108,34 @@ async function profile(browserName, site, out) {
   server.close();
 }
 
+// formats.py in Pyodide: parquet, npz and csv. pyarrow is loaded as a Pyodide
+// package, which is timed (and its download counted).
+async function formats(browserName, out) {
+  const browser = await BROWSERS[browserName].launch();
+  const page = await browser.newPage();
+  await page.goto("about:blank");
+  await page.addScriptTag({ url: `${PYODIDE}pyodide.js` });
+  const source = fs.readFileSync(path.join(__dirname, "formats.py"), "utf8");
+  const result = await page.evaluate(async ({ source, indexURL }) => {
+    const py = await loadPyodide({ indexURL });
+    await py.loadPackage(["numpy", "pandas"]);
+    const before = performance.getEntriesByType("resource").reduce((n, e) => n + (e.transferSize || e.encodedBodySize || 0), 0);
+    const t = performance.now();
+    let loaded = "pyarrow loaded";
+    try { await py.loadPackage("pyarrow"); } catch (error) { loaded = `pyarrow not loadable: ${String(error).slice(0, 120)}`; }
+    const loadSeconds = (performance.now() - t) / 1000;
+    const after = performance.getEntriesByType("resource").reduce((n, e) => n + (e.transferSize || e.encodedBodySize || 0), 0);
+    const ns = py.globals.get("dict")();
+    ns.set("__name__", "formats");
+    py.runPython(source, { globals: ns });
+    const timings = JSON.parse(py.runPython("import json; json.dumps(run())", { globals: ns }));
+    return { loaded, "pyarrow load s": Math.round(loadSeconds * 10) / 10, "pyarrow download MB": Math.round((after - before) / 104857.6) / 10, ...timings };
+  }, { source, indexURL: PYODIDE });
+  fs.writeFileSync(out, JSON.stringify({ browser: browserName, version: browser.version(), ...result }, null, 1));
+  console.log(JSON.stringify(result, null, 1));
+  await browser.close();
+}
+
 // A snapshot of Pyodide's memory with the engine built, and a page started from
 // it: what a start would cost if the engine were not built again.
 //   node browser.js snapshot BROWSER SITE_DIR OUT.json make|load|heap SNAPSHOT_FILE
@@ -257,6 +285,7 @@ async function queries(browserName, site, queriesFile, out, repeats) {
 
 const [mode, browserName, ...rest] = process.argv.slice(2);
 (mode === "micro" ? micro(browserName, rest[0])
+  : mode === "formats" ? formats(browserName, rest[0])
   : mode === "profile" ? profile(browserName, rest[0], rest[1])
     : mode === "snapshot" ? snapshot(browserName, rest[0], rest[1], rest[2], rest[3])
       : queries(browserName, rest[0], rest[1], rest[2], Number(rest[3] ?? 1)))

@@ -1,0 +1,15 @@
+{
+ "browser": "chromium",
+ "version": "149.0.7827.3",
+ "loaded": "pyarrow loaded",
+ "pyarrow load s": 1.8,
+ "pyarrow download MB": 9.5,
+ "npz KB": 3941,
+ "npz read s": 0.04379999999999917,
+ "csv KB": 10849,
+ "csv read s": 0.1637000000000004,
+ "import pyarrow s": 0,
+ "parquet KB": 4073,
+ "parquet read s": 0.06370000000000076,
+ "pyarrow": "22.0.0"
+}

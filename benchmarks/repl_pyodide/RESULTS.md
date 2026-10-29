@@ -86,6 +86,20 @@ and the memory of Pyodide after the build is 781 MB, 268 MB compressed
 and eight times the page's whole download; `_makeSnapshot` also stopped on an
 import of `requests` (`js.crossOriginIsolated`: Illegal invocation).
 
+## File formats in Pyodide (`formats.py`, `browser.js formats`)
+
+A table of the size of the engine's peaks (447 000 rows: x, y, z, study), seconds
+to read it; pyarrow 22.0.0 in Pyodide, 18.1.0 natively (`formats_chromium.json`):
+
+| | size | native | Pyodide |
+|---|---|---|---|
+| npz (compressed) | 3.9 MB | 0.027 | 0.044 |
+| parquet | 4.1 MB | 0.010 | 0.064 |
+| csv | 10.8 MB | 0.137 | 0.164 |
+
+Loading pyarrow in Pyodide takes 1.8 s and downloads 9.5 MB, which npz does not
+need.
+
 ## Caveats
 
 - One machine. Nothing here was measured on another CPU, a phone or a different
