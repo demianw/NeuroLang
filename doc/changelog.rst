@@ -26,6 +26,13 @@ Unreleased
   the missing optional dependency of the apps; docstrings of the apps name
   ``neurolang_apps``.
 
+**Bug fixes:**
+
+* The REPL in the browser could not start: its page and the script that builds
+  its bundle (``doc/make_repl_bundle.py``) imported modules from
+  ``neurolang.utils`` that the split into packages moved to
+  ``neurolang_apps.utils``.
+
 **Performance:**
 
 * A probability over the choice of a study with a peak within a radius of
@@ -40,6 +47,18 @@ Unreleased
   numbers its pairs of rows with 32-bit integers and does not copy its result.
 
 **New features:**
+
+* The REPL in the browser shows the work of the AI assistant as it happens, in
+  a section of the page you can open: the model's calls, the tool calls of
+  the ReAct agent, its queries and what they gave back. The code box colours
+  the query as the terminal does, in Datalog and in SQUALL. Each result has a
+  Download menu: all its rows as CSV or TSV, and its NIfTI image, the file
+  ``.save`` writes, for each value column; the brain tab offers the images
+  too. The *Docs* menu and a hint under the box link the keyword at the
+  cursor (``PROB``, ``AGGREGATE``, ``:-``…) to its section of the tutorial;
+  the examples and the relations of the engine, and the rules you define,
+  are listed, to put them in the box with a click; and *Copy link* shares the
+  query in the address (after the ``#``, which no server receives).
 
 * The example LLM configuration has the providers ``albert-deepseek``,
   ``openrouter-gemma`` and ``openrouter-deepseek``: DeepSeek V4 Flash and
