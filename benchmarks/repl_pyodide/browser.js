@@ -69,7 +69,7 @@ async function profile(browserName, site, out) {
   const source = fs.readFileSync(path.join(__dirname, "profile_build.py"), "utf8");
   const started = Date.now();
   const steps = [];
-  const lines = await page.evaluate(async ({ base, indexURL, source, packages, pypi }) => {
+  const lines = await page.evaluate(async ({ base, indexURL, source, packages, pypi, flags }) => {
     const times = [];
     const mark = (what) => times.push([performance.now(), what]);
     mark("start");
@@ -95,11 +95,12 @@ async function profile(browserName, site, out) {
     py.setStdout({ batched: (line) => lines.push(line) });
     py.setStderr({ batched: () => {} });
     py.globals.set("profile_source", source);
-    py.runPython(`import sys\nsys.argv = ["profile_build.py", "/data"]\nexec(compile(profile_source, "profile_build.py", "exec"), {"__name__": "__main__"})`);
+    py.globals.set("profile_flags", flags);
+    py.runPython(`import sys\nsys.argv = ["profile_build.py", *profile_flags, "/data"]\nexec(compile(profile_source, "profile_build.py", "exec"), {"__name__": "__main__"})`);
     mark("engine built");
     lines.push("SETUP " + JSON.stringify(times.map(([t, w], i) => [w, i ? Math.round((t - times[i - 1][0]) / 100) / 10 : 0])));
     return lines;
-  }, { base, indexURL: PYODIDE, source, packages: PYODIDE_PACKAGES, pypi: PYPI_PACKAGES });
+  }, { base, indexURL: PYODIDE, source, packages: PYODIDE_PACKAGES, pypi: PYPI_PACKAGES, flags: (process.env.PROFILE_FLAGS || "").split(" ").filter(Boolean) });
   const text = lines.filter((l) => !l.startsWith("SETUP")).join("\n");
   const setup = JSON.parse(lines.find((l) => l.startsWith("SETUP")).slice(6));
   fs.writeFileSync(out, JSON.stringify({ browser: browserName, version: browser.version(), "total s": (Date.now() - started) / 1000, setup, build: text }, null, 1));

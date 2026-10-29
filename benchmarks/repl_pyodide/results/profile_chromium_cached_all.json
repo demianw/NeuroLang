@@ -1,0 +1,36 @@
+{
+ "browser": "chromium",
+ "version": "149.0.7827.3",
+ "total s": 23.189,
+ "setup": [
+  [
+   "start",
+   0
+  ],
+  [
+   "pyodide loaded",
+   2
+  ],
+  [
+   "numpy, scipy, pandas, scikit-learn loaded",
+   3.7
+  ],
+  [
+   "PyPI packages installed",
+   1.8
+  ],
+  [
+   "NeuroLang wheels installed",
+   0.2
+  ],
+  [
+   "data unpacked",
+   0.3
+  ],
+  [
+   "engine built",
+   15.2
+  ]
+ ],
+ "build": "\nimports (s, what they import included):\n    0.44 s  numpy\n    2.21 s  pandas\n    0.67 s  neurolang_apps.utils.engine_registry\n    3.79 s  neurolang_apps.utils.tui.web\nloaded after the build: nilearn (no), sklearn (no), scipy, matplotlib (no), rdflib, lark, rich, prompt_toolkit, nibabel, pyarrow (no), requests (no), httpx (no)\n\nbuild_engine: 8.0 s\n     4.2 s    53%  _phase_ontologies\n     1.6 s    20%  _phase_python_init\n     1.4 s    17%  _phase_atlases\n     0.5 s     6%  _phase_resamplings\n     0.2 s     3%  _phase_datalog_init\n     0.0 s     0%  _phase_text_embeddings\n     0.0 s     0%  _phase_base_symbols\n     0.0 s     0%  _phase_builtins\n     0.0 s     0%  _phase_downloads\n     0.0 s     0%  _phase_templates\n     0.0 s     0%  _phase_relations\n     0.0 s     0%  _phase_probabilistic_choices"
+}

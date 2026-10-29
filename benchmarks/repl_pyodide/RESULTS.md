@@ -86,6 +86,26 @@ and the memory of Pyodide after the build is 781 MB, 268 MB compressed
 and eight times the page's whole download; `_makeSnapshot` also stopped on an
 import of `requests` (`js.crossOriginIsolated`: Illegal invocation).
 
+## With the mask, the voxels and the atlas fetches kept too
+
+Profiling imports showed what the build asked nilearn for: in Pyodide
+`scipy.stats` takes 3.5 s to import, `sklearn.base` 0.4 s and `nilearn.datasets`
+2.3 s (natively 1.2 s and 1 s), to find files already on disk and resample the
+MNI template (`profile_phase.py`, `import_chains.py`, `--nilearn-first`). Keeping
+the resampled mask, the brain and cortex voxels and where the atlases are
+(`profile_chromium_cached_all.json`), 3.6 MB in all, a build never imports
+nilearn or scikit-learn. Seconds:
+
+| | native | Pyodide, Chromium |
+|---|---|---|
+| `build_engine`, nothing kept | 58.1 | 112.1 |
+| atlas pairs kept (PR #1022, first version) | 9.0 | 14.8 |
+| everything kept | 5.8 | 8.0 |
+| the page ready, Chromium / WebKit | | 127 → 30 → 23 / 171 → 26 |
+
+All 11 queries give the same number of rows in Pyodide (WebKit) as natively
+(`queries_webkit_cached_all.json`).
+
 ## File formats in Pyodide (`formats.py`, `browser.js formats`)
 
 A table of the size of the engine's peaks (447 000 rows: x, y, z, study), seconds

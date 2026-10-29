@@ -1,0 +1,139 @@
+{
+ "browser": "webkit",
+ "version": "26.4",
+ "queries": [
+  {
+   "name": "select",
+   "runs": [
+    {
+     "s": 2,
+     "wall s": 2.368,
+     "rows": 1,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "prob-all-terms",
+   "runs": [
+    {
+     "s": 1.78,
+     "wall s": 2.333,
+     "rows": 3228,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "prob-subcortex",
+   "runs": [
+    {
+     "s": 3.23,
+     "wall s": 3.821,
+     "rows": 32,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "bf-term",
+   "runs": [
+    {
+     "s": 4.65,
+     "wall s": 5.097,
+     "rows": 1,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "bf-all-terms-gyrus",
+   "runs": [
+    {
+     "s": 4.33,
+     "wall s": 4.885,
+     "rows": 7,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "bf-all-terms-point",
+   "runs": [
+    {
+     "s": 3.37,
+     "wall s": 3.867,
+     "rows": 386,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "coactive-pairs",
+   "runs": [
+    {
+     "s": 4.01,
+     "wall s": 4.345,
+     "rows": 4950,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "coactive-network",
+   "runs": [
+    {
+     "s": 3.61,
+     "wall s": 4.087,
+     "rows": 495,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "coactive-chance",
+   "runs": [
+    {
+     "s": 3.23,
+     "wall s": 3.593,
+     "rows": 1,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "ci-bf",
+   "runs": [
+    {
+     "s": 17.25,
+     "wall s": 17.78,
+     "rows": 1,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "ci-difference",
+   "runs": [
+    {
+     "s": 11.02,
+     "wall s": 11.448,
+     "rows": 1,
+     "outcome": "ok"
+    }
+   ]
+  }
+ ],
+ "errors": [],
+ "startup s": 26.101,
+ "startup steps": [
+  "0s Starting…",
+  "1s Loading Python…",
+  "3s Loading numpy, scipy, pandas and scikit-learn…",
+  "6s Installing the packages NeuroLang needs…",
+  "8s Downloading nl_expr…",
+  "9s Downloading the Neurosynth data…",
+  "9s Building the neurosynth engine at 2 mm…",
+  "26s Ready."
+ ]
+}
