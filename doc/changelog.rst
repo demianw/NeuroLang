@@ -1,7 +1,7 @@
 .. _changelog:
 
 Changelog
-==
+=========
 
 All notable changes to NeuroLang are documented here.
 
@@ -59,7 +59,7 @@ Unreleased
   the examples and the relations of the engine, and the rules you define,
   are listed, to put them in the box with a click; and *Copy link* shares the
   query in the address (after the ``#``, which no server receives).
-=======
+
 * Confidence intervals by resampling the studies.
   ``nl.add_resampling("boot_studies", choice="selected_study")``, or
   ``resamplings`` in an engine's YAML, adds replicates of a probabilistic
