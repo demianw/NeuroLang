@@ -1,0 +1,50 @@
+{
+ "browser": "chromium",
+ "version": "149.0.7827.3",
+ "queries": [
+  {
+   "name": "schaefer_activated",
+   "runs": [
+    {
+     "s": 1.93,
+     "wall s": 2.598,
+     "rows": 298632,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "destrieux_activated",
+   "runs": [
+    {
+     "s": 2.05,
+     "wall s": 2.573,
+     "rows": 312244,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "tian_activated",
+   "runs": [
+    {
+     "s": 1.41,
+     "wall s": 1.815,
+     "rows": 40675,
+     "outcome": "ok"
+    }
+   ]
+  }
+ ],
+ "errors": [],
+ "startup s": 32.291,
+ "startup steps": [
+  "0s Starting…",
+  "1s Loading Python…",
+  "3s Loading numpy, scipy, pandas and scikit-learn…",
+  "7s Installing the packages NeuroLang needs…",
+  "8s Downloading the Neurosynth data…",
+  "9s Building the neurosynth engine at 2 mm…",
+  "32s Ready."
+ ]
+}

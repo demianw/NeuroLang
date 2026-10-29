@@ -61,6 +61,31 @@ wheels and the data. `atlas_activation` finds, for each of the 447 000 peaks, th
 voxels of the atlas within 3 mm in a cube of 343 candidates, for each atlas, at
 every start: 15 s per atlas natively, and its result never changes.
 
+## With the atlas tables kept (branch `feat/repl-atlas-cache`)
+
+`atlas_activation`'s pairs are kept in the data directory, 1.6 MB of `.npz` for
+the three atlases (`profile_chromium_cached.json`). Seconds:
+
+| | native | Pyodide, Chromium |
+|---|---|---|
+| `build_engine`, tables found | 58.1 | 112.1 |
+| `build_engine`, tables read | 9.0 | 14.7 |
+| `_phase_atlases`, found / read | 50.3 / 1.4 | 98.9 / 1.5 |
+| the page ready (Pyodide, packages, engine) | | 127 → 30 |
+
+The file written by CPython (numpy 1.26) was read as it is by Pyodide (numpy
+2.4.6). Natively and in the page the three `*_activated` relations have the same
+number of rows (298 632, 312 244, 40 675) and the 11 queries above give the same
+number of rows (`activated_chromium.json`).
+
+Keeping the whole engine instead, measured (`pickle_engine.py`, `browser.js
+snapshot`): the built engine cannot be pickled (`PicklingError`: the
+parameterised `Symbol[...]` classes of the expressions cannot be found by name),
+and the memory of Pyodide after the build is 781 MB, 268 MB compressed
+(`snapshot_heap.json`), more than GitHub accepts in a file of the pages' repository
+and eight times the page's whole download; `_makeSnapshot` also stopped on an
+import of `requests` (`js.crossOriginIsolated`: Illegal invocation).
+
 ## Caveats
 
 - One machine. Nothing here was measured on another CPU, a phone or a different

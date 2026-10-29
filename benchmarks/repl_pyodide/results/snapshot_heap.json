@@ -1,0 +1,36 @@
+{
+ "browser": "chromium",
+ "step": "heap",
+ "times": [
+  [
+   "start",
+   0.109
+  ],
+  [
+   "environment installed",
+   7.889
+  ],
+  [
+   "engine built",
+   127.848
+  ],
+  [
+   "first query answered",
+   129.711
+  ],
+  [
+   "heap measured",
+   147.049
+  ]
+ ],
+ "probeSeconds": 1.863,
+ "facts": {
+  "data dir": true,
+  "neurolang_apps imported": true,
+  "answer": "<pre class=\"repl-output\" style=\"font-family: inherit\"><code>Running query...\n<span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\">516 rows</span>\nQuery completed in 1.63 s\n</code></pre>"
+ },
+ "heapMB": 781,
+ "heapGzipMB": 268,
+ "gzipSeconds": 17.338,
+ "total s": 146.962
+}
