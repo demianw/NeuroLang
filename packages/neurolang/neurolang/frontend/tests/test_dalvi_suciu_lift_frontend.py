@@ -351,6 +351,35 @@ def test_integer_constant_of_a_deterministic_atom():
     assert dict(result) == pytest.approx({"x": 0.5, "y": 0.5})
 
 
+def test_union_of_rules_one_without_a_variable_of_the_head():
+    """In a(s, r) :- R(r), C(s), A(s, r) and a(s, r) :- R(r), C(s),
+    M(s), the conjunctive normal form factors R(r) and C(s) out, leaving
+    the clause A(s, r) ∨ M(s), whose union of plans had columns (s, r) and
+    (s); it is declined, and solved by model counting."""
+    from .. import NeurolangPDL
+
+    nl = NeurolangPDL()
+    nl.add_tuple_set(
+        [("s1", "r1"), ("s2", "r1"), ("s3", "r2")], name="activates"
+    )
+    nl.add_tuple_set([("s1", "t1"), ("s3", "t1")], name="mentions")
+    nl.add_tuple_set([("r1",), ("r2",)], name="region")
+    nl.add_uniform_probabilistic_choice_over_set(
+        [("s1",), ("s2",), ("s3",)], name="selected_study"
+    )
+    result = nl.execute_datalog_program(
+        "a(s, r) :- region(r), selected_study(s), activates(s, r)\n"
+        "a(s, r) :- region(r), selected_study(s), mentions(s, 't1')\n"
+        "p(s, r, PROB) :- a(s, r)\n"
+        "ans(s, r, x) :- p(s, r, x)"
+    )
+    expected = {
+        ("s1", "r1"), ("s2", "r1"), ("s3", "r2"), ("s1", "r2"), ("s3", "r1")
+    }
+    assert {(s, r) for s, r, _ in result} == expected
+    assert [x for _, _, x in result] == pytest.approx([1 / 3] * 5)
+
+
 @pytest.mark.parametrize("solvers", [{}, LIFTED_ONLY])
 def test_peaks_of_the_studies_of_a_term(solvers):
     """
@@ -432,6 +461,49 @@ def test_comparison_with_a_constant_of_a_bound_variable(
     result = nl.solve_all()["q"].as_pandas_dataframe()
     assert len(result) == 1
     assert result.iloc[0, 0] == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("head, body", [
+    ("x, y", "R(x), R(y), S(x, y)"),
+    ("x, y, w", "R(x), R(y), R(w), S(x, y), V(y, w)"),
+    ("x, y, w", "R(x), R(y), R(w), S(x, y), V(y, w), T(y)"),
+    ("x, y, w", "R(x), R(y), R(w), T(x), T(y), S(x, y)"),
+])
+def test_answer_variables_at_the_same_position(head, body):
+    """
+    The atoms of R, and of T, with free variables at the same position are
+    lifted on each partition of the equalities of the variables, and have
+    the probabilities weighted model counting gives.
+    """
+    from .. import NeurolangPDL
+    from ..probabilistic_frontend import (
+        wmc_solve_marg_query,
+        wmc_solve_succ_query
+    )
+
+    def solve(**solvers):
+        nl = NeurolangPDL(**solvers)
+        facts = {
+            "R": [(0.2, 0), (0.5, 1), (0.7, 2)],
+            "T": [(0.9, 0), (0.4, 1), (0.6, 2)],
+            "S": [(0.3, 0, 1), (0.8, 1, 1), (0.6, 2, 0), (0.5, 1, 2)],
+            "V": [(0.4, 1, 0), (0.7, 1, 1), (0.9, 2, 2), (0.2, 0, 2)],
+        }
+        for name, tuples in facts.items():
+            nl.add_probabilistic_facts_from_tuples(tuples, name=name)
+        nl.execute_datalog_program(f"q({head}, PROB) :- {body}")
+        return {
+            tuple(row[:-1]): row[-1]
+            for row in nl.solve_all()["q"].as_pandas_dataframe().itertuples(
+                index=False
+            )
+        }
+
+    expected = solve(
+        probabilistic_solvers=(wmc_solve_succ_query,),
+        probabilistic_marg_solvers=(wmc_solve_marg_query,),
+    )
+    assert solve(**LIFTED_ONLY) == pytest.approx(expected)
 
 
 @pytest.mark.parametrize("solvers", [{}, LIFTED_ONLY])

@@ -1,7 +1,7 @@
 .. _changelog:
 
 Changelog
-=========
+==
 
 All notable changes to NeuroLang are documented here.
 
@@ -59,6 +59,24 @@ Unreleased
   the examples and the relations of the engine, and the rules you define,
   are listed, to put them in the box with a click; and *Copy link* shares the
   query in the address (after the ``#``, which no server receives).
+=======
+* Confidence intervals by resampling the studies.
+  ``nl.add_resampling("boot_studies", choice="selected_study")``, or
+  ``resamplings`` in an engine's YAML, adds replicates of a probabilistic
+  choice, the Bayesian, classical or Poisson bootstrap of its outcomes.
+  ``RESAMPLE[boot_studies](pred(x)) = b`` is then ``pred(x)``, any rule
+  over ``PROB`` of the choice including the measures computed from the
+  probabilities, such as Bayes factors, on replicate ``b``, and
+  ``percentile(x, 2.5)`` and ``percentile(x, 97.5)`` over the replicates
+  give the interval. Every query sees the same replicates, so that two
+  measures are compared on the same ``b``. It rewrites the rules into
+  sums over the outcomes of the choice, weighted by each replicate, and
+  needs no other solver; on Neurosynth, the interval of the Bayes factor
+  of a term for a region takes 15 s. The ``neurosynth`` and
+  ``neurostore`` engines have ``boot_studies``, 500 and 200 replicates of
+  ``selected_study``, and the query assistant has examples and guidance
+  for questions on how certain an answer is. See the tutorial,
+  :doc:`tutorial_datalog`, section 10.6.
 
 * The example LLM configuration has the providers ``albert-deepseek``,
   ``openrouter-gemma`` and ``openrouter-deepseek``: DeepSeek V4 Flash and
@@ -114,6 +132,26 @@ Unreleased
 * ``neurolang-apps`` depends on ``pyarrow``, which the ``neurostore``
   engine needs to read the parquet files of its releases and which
   NeuroLang never declared.
+
+**Bug fixes:**
+
+* Two aggregations with arguments in one head, such as
+  ``percentile(v, 2.5)`` and ``percentile(v, 97.5)``, gave the result of
+  the last one for both: their functions shared one global name.
+
+* A query whose head aggregates over probabilities, such as
+  ``ans(max(p)) :- p_term(t, p)``, failed with
+  ``NoValidChaseClassForStratumException``: it was solved by the
+  deterministic chase, which does not compute the probabilities.
+
+* A probability over a predicate of two rules, one of which binds a
+  variable of the head only through an atom both share, as
+  ``a(s, r) :- region(r), selected_study(s), activates(s, r)`` and
+  ``a(s, r) :- region(r), selected_study(s), mentions(s, 't1')``, failed
+  with ``NeuroLangTypeException``: the lifted plan was the union of the
+  relations of ``activates(s, r)`` and ``mentions(s, 't1')``, without the
+  same columns. Such a union is declined, see
+  :doc:`probabilistic_lifting`.
 
 
 v0.1a21 (2026-10-21)
@@ -273,6 +311,13 @@ v0.1a21 (2026-10-21)
   brain average), computed in the REPL of the ``neurosynth`` engine, see
   :ref:`tutorial-neurosynth-tests`.
 
+* Documentation: the mutual information of a term and the activation of a
+  voxel, a rule over the engine's ``p_term``, ``p_a`` and ``p_a_given_t``,
+  ranks the voxels as Neurosynth's association test does, which the lift
+  does not: for *prefrontal*, the Dice coefficient of its top 5% of the
+  brain with that of Neurosynth's map is 0.83, against 0.51 for the lift.
+  See :ref:`neurosynth-mutual-information`.
+
 * ``.view`` of a result with several value columns shows an overlay per
   column, each with its own threshold, colormap, symmetry, opacity and
   visibility, a colour bar and its value at the cursor; ``--fill V`` sets
@@ -401,6 +446,13 @@ v0.1a21 (2026-10-21)
 
 **Bug fixes:**
 
+* The REPL block of :ref:`tutorial-neurosynth-tests` names the rules
+  restricted to the cortex with ``_cortex`` (``ratios_cortex``,
+  ``selected_voxel_cortex``, …): pasted in the ``neurosynth`` engine,
+  which now predefines ``selected_voxel``, ``p_a``, ``p_a_given_t`` and
+  ``ratios`` over the brain, it failed on its second definition of
+  ``selected_voxel`` and added its rules to those of the others.
+  
 * The badges of the README: the coverage badge, deployed to ``gh-pages``,
   was deleted by each deployment of the benchmarks' dashboard there (and
   deleted it in turn): it has its own branch, ``badges``. The Python badge
@@ -422,6 +474,7 @@ v0.1a21 (2026-10-21)
   are the same event.  The lifted plan of the deterministic subquery
   ``∃y r(x, y)`` keeps its tuples with a probability of 1, and the small
   dichotomy theorem solver leaves such a query to the lifted solver.
+  
 * A probabilistic query no longer fails with ``AttributeError: type object
   'Unknown' has no attribute '__origin__'`` when the program has a
   query-based probabilistic choice, such as ``selected_voxel(i, j, k) ^ (1 /
