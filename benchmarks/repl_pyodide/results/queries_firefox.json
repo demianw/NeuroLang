@@ -1,0 +1,129 @@
+{
+ "browser": "firefox",
+ "version": "150.0.2",
+ "queries": [
+  {
+   "name": "select",
+   "runs": [
+    {
+     "s": 13.65,
+     "wall s": 15.594,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "prob-all-terms",
+   "runs": [
+    {
+     "s": 12.46,
+     "wall s": 14.488,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "prob-subcortex",
+   "runs": [
+    {
+     "s": 23.65,
+     "wall s": 25.683,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "bf-term",
+   "runs": [
+    {
+     "s": 32.64,
+     "wall s": 34.669,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "bf-all-terms-gyrus",
+   "runs": [
+    {
+     "s": 31.81,
+     "wall s": 33.882,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "bf-all-terms-point",
+   "runs": [
+    {
+     "s": 23.44,
+     "wall s": 25.422,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "coactive-pairs",
+   "runs": [
+    {
+     "s": 28.96,
+     "wall s": 30.94,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "coactive-network",
+   "runs": [
+    {
+     "s": 27.01,
+     "wall s": 28.968,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "coactive-chance",
+   "runs": [
+    {
+     "s": 24,
+     "wall s": 25.88,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "ci-bf",
+   "runs": [
+    {
+     "s": 97.7,
+     "wall s": 99.624,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "ci-difference",
+   "runs": [
+    {
+     "s": 62.37,
+     "wall s": 64.256,
+     "outcome": "ok"
+    }
+   ]
+  }
+ ],
+ "errors": [],
+ "startup s": 619.857,
+ "startup steps": [
+  "0s Starting…",
+  "1s Loading Python…",
+  "11s Loading numpy, scipy, pandas and scikit-learn…",
+  "22s Installing the packages NeuroLang needs…",
+  "27s Downloading nl_expr…",
+  "27s Downloading neurolang…",
+  "28s Downloading the Neurosynth data…",
+  "28s Building the neurosynth engine at 2 mm…",
+  "620s Ready."
+ ]
+}

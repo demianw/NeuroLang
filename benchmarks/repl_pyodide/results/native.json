@@ -1,0 +1,236 @@
+{
+ "engine build s": 63.9,
+ "queries": [
+  {
+   "name": "select",
+   "runs": [
+    {
+     "s": 1.4,
+     "wall s": 1.59,
+     "failed": false,
+     "rows": [
+      1
+     ]
+    },
+    {
+     "s": 1.29,
+     "wall s": 1.48,
+     "failed": false,
+     "rows": [
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "name": "prob-all-terms",
+   "runs": [
+    {
+     "s": 1.09,
+     "wall s": 1.29,
+     "failed": false,
+     "rows": [
+      3228
+     ]
+    },
+    {
+     "s": 1.02,
+     "wall s": 1.21,
+     "failed": false,
+     "rows": [
+      3228
+     ]
+    }
+   ]
+  },
+  {
+   "name": "prob-subcortex",
+   "runs": [
+    {
+     "s": 2.09,
+     "wall s": 2.27,
+     "failed": false,
+     "rows": [
+      32
+     ]
+    },
+    {
+     "s": 2.1,
+     "wall s": 2.28,
+     "failed": false,
+     "rows": [
+      32
+     ]
+    }
+   ]
+  },
+  {
+   "name": "bf-term",
+   "runs": [
+    {
+     "s": 2.98,
+     "wall s": 3.17,
+     "failed": false,
+     "rows": [
+      1
+     ]
+    },
+    {
+     "s": 3.0,
+     "wall s": 3.18,
+     "failed": false,
+     "rows": [
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "name": "bf-all-terms-gyrus",
+   "runs": [
+    {
+     "s": 2.71,
+     "wall s": 2.91,
+     "failed": false,
+     "rows": [
+      7
+     ]
+    },
+    {
+     "s": 2.89,
+     "wall s": 3.08,
+     "failed": false,
+     "rows": [
+      7
+     ]
+    }
+   ]
+  },
+  {
+   "name": "bf-all-terms-point",
+   "runs": [
+    {
+     "s": 2.02,
+     "wall s": 2.22,
+     "failed": false,
+     "rows": [
+      386
+     ]
+    },
+    {
+     "s": 1.95,
+     "wall s": 2.13,
+     "failed": false,
+     "rows": [
+      386
+     ]
+    }
+   ]
+  },
+  {
+   "name": "coactive-pairs",
+   "runs": [
+    {
+     "s": 2.55,
+     "wall s": 2.74,
+     "failed": false,
+     "rows": [
+      4950
+     ]
+    },
+    {
+     "s": 2.51,
+     "wall s": 2.7,
+     "failed": false,
+     "rows": [
+      4950
+     ]
+    }
+   ]
+  },
+  {
+   "name": "coactive-network",
+   "runs": [
+    {
+     "s": 2.34,
+     "wall s": 2.53,
+     "failed": false,
+     "rows": [
+      495
+     ]
+    },
+    {
+     "s": 2.35,
+     "wall s": 2.53,
+     "failed": false,
+     "rows": [
+      495
+     ]
+    }
+   ]
+  },
+  {
+   "name": "coactive-chance",
+   "runs": [
+    {
+     "s": 2.21,
+     "wall s": 2.4,
+     "failed": false,
+     "rows": [
+      1
+     ]
+    },
+    {
+     "s": 1.94,
+     "wall s": 2.11,
+     "failed": false,
+     "rows": [
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "name": "ci-bf",
+   "runs": [
+    {
+     "s": 14.89,
+     "wall s": 15.09,
+     "failed": false,
+     "rows": [
+      1
+     ]
+    },
+    {
+     "s": 14.88,
+     "wall s": 15.06,
+     "failed": false,
+     "rows": [
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "name": "ci-difference",
+   "runs": [
+    {
+     "s": 9.97,
+     "wall s": 10.18,
+     "failed": false,
+     "rows": [
+      1
+     ]
+    },
+    {
+     "s": 10.41,
+     "wall s": 10.6,
+     "failed": false,
+     "rows": [
+      1
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,12 @@
+{
+ "browser": "firefox",
+ "version": "150.0.2",
+ "python loop, 3M iterations": 2.8799999999999955,
+ "numpy 1200x1200 matmul": 29.674000000000007,
+ "numpy sort of 3M floats": 1.2719999999999914,
+ "pandas groupby sum, 2M rows": 0.41100000000000136,
+ "pandas merge, 1M x 1M": 0.27899999999999636,
+ "pandas str.startswith, 500k": 0.6160000000000139,
+ "versions": "numpy 2.4.6, pandas 3.0.2",
+ "load and run s": 139.884
+}

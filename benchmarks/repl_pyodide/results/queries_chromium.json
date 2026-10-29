@@ -1,0 +1,182 @@
+{
+ "browser": "chromium",
+ "version": "149.0.7827.3",
+ "queries": [
+  {
+   "name": "select",
+   "runs": [
+    {
+     "s": 1.96,
+     "wall s": 2.335,
+     "outcome": "ok"
+    },
+    {
+     "s": 1.92,
+     "wall s": 2.319,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "prob-all-terms",
+   "runs": [
+    {
+     "s": 1.73,
+     "wall s": 2.063,
+     "outcome": "ok"
+    },
+    {
+     "s": 1.7,
+     "wall s": 2.061,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "prob-subcortex",
+   "runs": [
+    {
+     "s": 3.15,
+     "wall s": 3.564,
+     "outcome": "ok"
+    },
+    {
+     "s": 3.19,
+     "wall s": 3.574,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "bf-term",
+   "runs": [
+    {
+     "s": 4.53,
+     "wall s": 4.842,
+     "outcome": "ok"
+    },
+    {
+     "s": 4.51,
+     "wall s": 5.087,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "bf-all-terms-gyrus",
+   "runs": [
+    {
+     "s": 4.3,
+     "wall s": 4.832,
+     "outcome": "ok"
+    },
+    {
+     "s": 4.36,
+     "wall s": 4.827,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "bf-all-terms-point",
+   "runs": [
+    {
+     "s": 3.22,
+     "wall s": 3.574,
+     "outcome": "ok"
+    },
+    {
+     "s": 3.16,
+     "wall s": 3.577,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "coactive-pairs",
+   "runs": [
+    {
+     "s": 3.85,
+     "wall s": 4.326,
+     "outcome": "ok"
+    },
+    {
+     "s": 3.82,
+     "wall s": 4.332,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "coactive-network",
+   "runs": [
+    {
+     "s": 3.63,
+     "wall s": 4.081,
+     "outcome": "ok"
+    },
+    {
+     "s": 3.53,
+     "wall s": 3.814,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "coactive-chance",
+   "runs": [
+    {
+     "s": 3.14,
+     "wall s": 3.569,
+     "outcome": "ok"
+    },
+    {
+     "s": 3.11,
+     "wall s": 3.574,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "ci-bf",
+   "runs": [
+    {
+     "s": 16.58,
+     "wall s": 16.955,
+     "outcome": "ok"
+    },
+    {
+     "s": 16.8,
+     "wall s": 17.211,
+     "outcome": "ok"
+    }
+   ]
+  },
+  {
+   "name": "ci-difference",
+   "runs": [
+    {
+     "s": 11,
+     "wall s": 11.657,
+     "outcome": "ok"
+    },
+    {
+     "s": 11.01,
+     "wall s": 11.41,
+     "outcome": "ok"
+    }
+   ]
+  }
+ ],
+ "errors": [],
+ "startup s": 133.924,
+ "startup steps": [
+  "0s Starting…",
+  "1s Loading Python…",
+  "3s Loading numpy, scipy, pandas and scikit-learn…",
+  "7s Installing the packages NeuroLang needs…",
+  "8s Downloading neurolang_apps…",
+  "9s Building the neurosynth engine at 2 mm…",
+  "134s Ready."
+ ]
+}
