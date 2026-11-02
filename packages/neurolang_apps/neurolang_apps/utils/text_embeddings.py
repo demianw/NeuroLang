@@ -307,12 +307,6 @@ class Specter2Encoder:
     def _load(self):
         if self._model is not None:
             return
-        if sys.platform == "emscripten":
-            raise ImportError(
-                "query_similarity embeds the query text with a neural "
-                "network, which the browser REPL cannot run: use "
-                "neurolang-repl in a terminal for it"
-            )
         try:
             import torch
             from adapters import AutoAdapterModel
