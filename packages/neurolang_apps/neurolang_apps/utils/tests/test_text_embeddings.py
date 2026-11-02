@@ -206,6 +206,12 @@ def test_encoder_import_error(monkeypatch):
         te.Specter2Encoder().encode_query("reading")
 
 
+def test_encoder_in_the_browser(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "emscripten")
+    with pytest.raises(ImportError, match="browser REPL cannot run"):
+        te.Specter2Encoder().encode_query("reading")
+
+
 def test_encoders_are_prepared_for_fork(monkeypatch, tmp_path):
     """On macOS a forked child, as the assistant checks queries in, cannot
     load a model nor use MPS: before the assistant forks, the encoders with
