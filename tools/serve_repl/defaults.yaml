@@ -7,8 +7,10 @@ port: 8766
 host: 127.0.0.1
 site: ~/.cache/neurolang/repl-site              # the page and its bundle
 embeddings: ~/.cache/neurolang/repl-embeddings  # the text embeddings kept
+downloads: ~/.cache/neurolang/repl-downloads    # what the bundle's engines download
 data_dir: neurolang_data      # --local: the engines' data
 resolution: 2.0               # --local: mm, the engines' MNI grid
+prepare: true                 # --local: build each engine before serving
 max_sessions: 8               # --users --local: sessions at once
 idle_minutes: 120             # --users --local: an unused session ends
 query_minutes: 60             # --users --local: a query is stopped (0: never)
