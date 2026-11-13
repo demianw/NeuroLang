@@ -987,7 +987,9 @@ def _extremum_conjunct(variable, variables, conjuncts, symbol_table):
         if is_comparison(f) and variable in extract_logic_free_variables(f)
     ]
     for comparison in comparisons:
-        if comparison.functor.value not in ORDER_SIDES or [
+        if comparison.functor.value not in ORDER_SIDES or variable not in (
+            comparison.args
+        ) or [
             variable in extract_logic_free_variables(arg)
             for arg in comparison.args
         ].count(True) != 1:
