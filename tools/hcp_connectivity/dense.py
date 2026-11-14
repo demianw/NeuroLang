@@ -29,7 +29,7 @@ def streamlines(path: Path, affine: np.ndarray, minimum_length: float,
                 tolerance: float) -> list:
     """The streamlines of the tractogram *path* of at least *minimum_length*
     mm, mapped by *affine* and compressed within *tolerance* mm."""
-    from dipy.tracking.streamline import compress_streamlines, length
+    from dipy.tracking.streamlinespeed import compress_streamlines, length
 
     lines = nib.streamlines.load(str(path)).streamlines
     kept = lines[np.flatnonzero(length(lines) >= minimum_length)]
