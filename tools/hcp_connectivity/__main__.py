@@ -46,6 +46,10 @@ def main(argv=None) -> None:
                   "of its HCP subject's segmentation", "tractogram", "hcp")
     sub.add_argument("--subject")
     sub.add_argument("--shift", type=int, default=3)
+    sub = command("fit-space", "the affine that maps HCP subjects' "
+                  "tractograms onto their MNINonLinear segmentations",
+                  "hcp", "out")
+    sub.add_argument("tractograms", type=Path, nargs="+")
     tasks(command("structural", "a worker parcellating the connectomes of "
                   "STAGING into OUT", "work", "staging", "out"), False)
     tasks(command("functional", "a task of the functional connectivity of "
@@ -73,6 +77,13 @@ def main(argv=None) -> None:
     elif args.command == "check-space":
         from .space import run
         run(args.tractogram, args.hcp, args.subject, args.shift)
+    elif args.command == "fit-space":
+        import numpy as np
+
+        from .space import fit
+        matrix = fit(args.tractograms, args.hcp)
+        np.savetxt(args.out, matrix, fmt="%.6f")
+        print(matrix)
     elif args.command == "osf":
         from .osf import run
         run(args.project, args.folder, args.jobs)
