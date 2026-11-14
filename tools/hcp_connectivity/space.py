@@ -85,3 +85,56 @@ def run(tractogram: Path, hcp: Path, subject: str = None,
     for key, value in result.items():
         print(f"{key}: {value}", flush=True)
     return result
+
+
+def soft_white_matter(wmparc: Path, sigma_mm: float = 1.0):
+    """The white matter of *wmparc*, blurred by a Gaussian of *sigma_mm*
+    (a smooth score of points), and its affine."""
+    from scipy.ndimage import gaussian_filter
+
+    mask, affine = white_matter(wmparc)
+    voxel = np.abs(np.diag(affine)[:3])
+    return gaussian_filter(mask.astype(float), sigma_mm / voxel), affine
+
+
+def soft_score(xyz: np.ndarray, soft: np.ndarray, affine: np.ndarray):
+    """The mean of the blurred white matter *soft* at the points *xyz*."""
+    from scipy.ndimage import map_coordinates
+
+    ijk = nib.affines.apply_affine(np.linalg.inv(affine), xyz)
+    return map_coordinates(soft, ijk.T, order=1, mode="constant").mean()
+
+
+def to_matrix(parameters: np.ndarray) -> np.ndarray:
+    """The 4 x 4 affine of 12 parameters: the 3 x 3 linear part as the
+    identity plus the first 9, the translation the last 3."""
+    matrix = np.eye(4)
+    matrix[:3, :3] += parameters[:9].reshape(3, 3)
+    matrix[:3, 3] = parameters[9:]
+    return matrix
+
+
+def fit(tractograms: list, hcp: Path, most: int = 50_000) -> np.ndarray:
+    """The affine that maps the points of the *tractograms* (of HCP
+    subjects, named by them) onto the white matter of their subjects'
+    MNINonLinear segmentations best: the one maximising the mean of the
+    blurred white matter at the points of all of them."""
+    from scipy.optimize import minimize
+
+    data = []
+    for path in tractograms:
+        subject = Path(path).name.split(".")[0]
+        soft, affine = soft_white_matter(
+            hcp / subject / "MNINonLinear" / "wmparc.nii.gz")
+        data.append((points(Path(path), most), soft, affine))
+
+    def loss(parameters):
+        matrix = to_matrix(parameters)
+        return -np.mean([soft_score(nib.affines.apply_affine(matrix, xyz),
+                                    soft, affine)
+                         for xyz, soft, affine in data])
+
+    result = minimize(loss, np.zeros(12), method="Powell",
+                      options={"xtol": 1e-4, "ftol": 1e-6, "maxfev": 20000})
+    print(f"fit: {-loss(np.zeros(12)):.4f} -> {-result.fun:.4f}", flush=True)
+    return to_matrix(result.x)
