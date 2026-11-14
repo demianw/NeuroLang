@@ -499,13 +499,13 @@ assistant_examples:
     datalog: |-
       covered(l, s) :- schaefer_covered(l, s), selected_study(s)
       topic(s) :- mentions(s, 'music'), selected_study(s)
-      ans(l, p) :- PROB[covered(l, s) // topic(s)] = p
+      ans(region, probability) :- PROB[covered(region, s) // topic(s)] = probability
 
   - question: "What share of the left opercular inferior frontal gyrus do studies of syntactic processing cover?"
     datalog: |-
       covered(s) :- destrieux_covered('L G front inf Opercular', s), selected_study(s)
       topic(s) :- mentions(s, 'syntactic'), selected_study(s)
-      ans(p) :- PROB[covered(s) // topic(s)] = p
+      ans(probability) :- PROB[covered(s) // topic(s)] = probability
 
   - question: "Which subcortical regions do reward studies cover more than studies in general do?"
     datalog: |-
@@ -513,7 +513,7 @@ assistant_examples:
       topic(s) :- mentions(s, 'reward'), selected_study(s)
       p_topic(l, p) :- PROB[covered(l, s) // topic(s)] = p
       p_all(l, p) :- PROB[covered(l, s)] = p
-      ans(l, ratio) :- p_topic(l, pt), p_all(l, pa), (ratio == pt / pa)
+      ans(region, ratio) :- p_topic(region, pt), p_all(region, pa), (ratio == pt / pa)
 
   - question: "What is the probability that a study activates right lateral orbital sulcus, given that it mentions linguistic?"
     datalog: |-
