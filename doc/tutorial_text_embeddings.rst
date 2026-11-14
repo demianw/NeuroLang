@@ -120,6 +120,36 @@ Each query text is embedded once and the similarities of all the studies
 to it are cached (the 16 most recent query texts), so each call is a
 lookup.
 
+.. _similarity-threshold:
+
+Choosing the similarity threshold
+---------------------------------
+
+The meta-analysis engines define the studies about a text, ``similar_study(q,
+s)``, in two steps.  A gate decides whether any study is about the text:
+the mean similarity of its 20 closest studies must reach the
+``similarity_gate`` of the engine's ``text_embeddings`` entry (0.75 by
+default, see :ref:`text-embeddings-section`).  If it does, the cutoff
+keeps the top 5% of the studies closest to the text, the 95th percentile
+of its positive similarities.  ``query_similarity_cutoff(q)`` does both,
+once per text, and returns ``inf`` when the gate fails::
+
+    similar_study(q, s) :- study(s) & (v == query_similarity(q, s)) & (c == query_similarity_cutoff(q)) & (v >= c)
+
+Every text has a top 5%, even one that no study is about: 'stock market
+crash' would get 719 studies of NeuroSynth.  A floor on each study's
+similarity, ``v >= 0.75``, does not fix this: SPECTER2 similarities have a
+baseline that depends on the text, and the mean similarity of the 20
+closest studies separates the texts about the studies from the others
+better (ROC AUC 0.93) than a floor or standardised similarities.  The gate
+is set at the 95th percentile of this statistic over texts off the domain:
+0.75 for NeuroSynth, which lets 2.4% of these texts through and keeps 63%
+of the texts about the domain, and 0.76 for NeuroStore (3.7%, 62%).
+
+:doc:`similarity_calibration` explains the choice, gives the calibration
+procedure, the script that runs it and the reference results of both
+engines, and how to recalibrate for another encoder or engine.
+
 Activations within a radius of the peaks
 ----------------------------------------
 
