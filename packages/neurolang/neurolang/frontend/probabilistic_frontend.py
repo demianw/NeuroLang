@@ -1181,7 +1181,7 @@ class NeurolangPDL(QueryBuilderDatalog):
                 _split_aggregation(rule, constraints)
                 for rule in deterministic_program.formulas
             ), ())),
-            constraints, chased=True,
+            constraints, chased=True, holds=holds,
         ).Xrewrite()
         return Union(chase_rules(
             constraints, holds, rewrite,

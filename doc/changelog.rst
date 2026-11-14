@@ -228,6 +228,15 @@ Unreleased
   namespace, and the ``neurosynth`` and ``neurostore`` engines name the
   Cognitive Atlas's ``cogat:CAO_00587``, ``cogat:measures``.
 
+* The rewriting of a query over an ontology drops a rewriting as soon as
+  one of its atoms, over a predicate without values, can never be
+  rewritten, instead of exploring all the rewritings it gives: on the
+  Cognitive Atlas, ``ans(s) :- cogat:measures(s, c), cogat:CAO_00587(c)``
+  explores 224 rewritings instead of 26,600 and takes 27 s instead of 60 s
+  (:doc:`ontologies`).  The W3C OWL test cases in the fragment NeuroLang
+  reads are run as tests, the others listed with the reason they are
+  skipped.
+
 * An engine extending another with the same ``text_embeddings`` entry
   (``neurosynth_iit``, ``neurostore_iit``, the ``_tracts`` ones) shares its
   caches (document embeddings, PubMed texts, model copies) in the
