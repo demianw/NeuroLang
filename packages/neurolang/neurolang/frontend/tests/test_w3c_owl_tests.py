@@ -21,12 +21,17 @@ ENTAILMENT = ("PositiveEntailmentTest", "NegativeEntailmentTest")
 READ_PREDICATES = {
     RDF.type, RDFS.subClassOf, OWL.onProperty, OWL.someValuesFrom,
     OWL.allValuesFrom, OWL.hasValue, OWL.intersectionOf, RDF.first,
-    RDF.rest, RDFS.label, RDFS.comment,
+    RDF.rest, RDFS.label, RDFS.comment, RDFS.subPropertyOf, RDFS.domain,
+    RDFS.range, OWL.inverseOf, OWL.equivalentProperty,
 }
 READ_TYPES = {
     OWL.Class, OWL.Restriction, OWL.ObjectProperty, OWL.DatatypeProperty,
-    OWL.Thing, OWL.Ontology,
+    OWL.Thing, OWL.Ontology, OWL.SymmetricProperty, OWL.TransitiveProperty,
 }
+PROPERTY_AXIOMS = (
+    RDFS.subPropertyOf, RDFS.domain, RDFS.range, OWL.inverseOf,
+    OWL.equivalentProperty,
+)
 
 
 def _vocabulary(term):
@@ -71,6 +76,8 @@ def classify(graph):
             return f"premises use {name(p)}"
         if p == RDF.type and _vocabulary(o) and o not in READ_TYPES:
             return f"premises use {name(o)}"
+        if p in PROPERTY_AXIOMS and isinstance(o, BNode):
+            return f"{name(p)} with a class expression"
         if p == RDF.type and isinstance(o, BNode):
             return "an individual is typed by a class expression"
         if p == OWL.intersectionOf and (None, RDFS.subClassOf, s) not in graph:

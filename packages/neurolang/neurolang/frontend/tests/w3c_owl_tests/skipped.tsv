@@ -3,7 +3,7 @@ approved/AllDifferent/Manifest001	PositiveEntailmentTest	premises use owl:distin
 approved/FunctionalProperty/Manifest001	PositiveEntailmentTest	premises use owl:FunctionalProperty
 approved/FunctionalProperty/Manifest002	PositiveEntailmentTest	premises use owl:FunctionalProperty
 approved/FunctionalProperty/Manifest003	PositiveEntailmentTest	premises use owl:FunctionalProperty
-approved/FunctionalProperty/Manifest004	PositiveEntailmentTest	premises use rdfs:range
+approved/FunctionalProperty/Manifest004	PositiveEntailmentTest	premises use owl:FunctionalProperty
 approved/I3.2/Manifest001	NotOwlFeatureTest	not an OWL feature test
 approved/I3.2/Manifest002	NotOwlFeatureTest	not an OWL feature test
 approved/I3.2/Manifest003	NotOwlFeatureTest	not an OWL feature test
@@ -12,7 +12,7 @@ approved/I4.1/Manifest001	NotOwlFeatureTest	not an OWL feature test
 approved/I4.6/Manifest001	PositiveEntailmentTest	premises use owl:sameAs
 approved/I4.6/Manifest002	PositiveEntailmentTest	premises use owl:sameIndividualAs
 approved/I5.1/Manifest001	PositiveEntailmentTest	premises use owl:InverseFunctionalProperty
-approved/I5.24/Manifest001	PositiveEntailmentTest	premises use rdfs:range
+approved/I5.24/Manifest001	PositiveEntailmentTest	premises use rdf:Property
 approved/I5.24/Manifest004	PositiveEntailmentTest	a class expression as a subclass
 approved/I5.3/Manifest005	ConsistencyTest	NeuroLang does not check consistency
 approved/I5.3/Manifest006	ConsistencyTest	NeuroLang does not check consistency
@@ -25,12 +25,10 @@ approved/I5.5/Manifest003	InconsistencyTest	NeuroLang does not check consistency
 approved/I5.5/Manifest004	InconsistencyTest	NeuroLang does not check consistency
 approved/InverseFunctionalProperty/Manifest001	PositiveEntailmentTest	premises use owl:InverseFunctionalProperty
 approved/InverseFunctionalProperty/Manifest002	PositiveEntailmentTest	premises use owl:InverseFunctionalProperty
-approved/InverseFunctionalProperty/Manifest003	PositiveEntailmentTest	premises use owl:inverseOf
-approved/InverseFunctionalProperty/Manifest004	PositiveEntailmentTest	premises use rdfs:domain
+approved/InverseFunctionalProperty/Manifest003	PositiveEntailmentTest	premises use owl:InverseFunctionalProperty
+approved/InverseFunctionalProperty/Manifest004	PositiveEntailmentTest	premises use owl:InverseFunctionalProperty
 approved/Nothing/Manifest001	InconsistencyTest	NeuroLang does not check consistency
 approved/Nothing/Manifest002	PositiveEntailmentTest	conclusion uses owl:sameClassAs (TBox)
-approved/SymmetricProperty/Manifest001	PositiveEntailmentTest	premises use owl:SymmetricProperty
-approved/TransitiveProperty/Manifest001	PositiveEntailmentTest	premises use owl:TransitiveProperty
 approved/cardinality/Manifest001	PositiveEntailmentTest	premises use owl:cardinality
 approved/cardinality/Manifest002	PositiveEntailmentTest	premises use owl:maxCardinality
 approved/cardinality/Manifest003	PositiveEntailmentTest	premises use owl:cardinality
@@ -50,7 +48,6 @@ approved/imports/Manifest006	ImportsLevelTest	owl:imports is not read
 approved/imports/Manifest007	ImportsLevelTest	owl:imports is not read
 approved/imports/Manifest008	ImportsLevelTest	owl:imports is not read
 approved/intersectionOf/Manifest001	PositiveEntailmentTest	intersectionOf other than as a superclass
-approved/inverseOf/Manifest001	PositiveEntailmentTest	premises use owl:inverseOf
 approved/maxCardinality/Manifest001	InconsistencyTest	NeuroLang does not check consistency
 approved/maxCardinality/Manifest002	InconsistencyTest	NeuroLang does not check consistency
 approved/miscellaneous/Manifest001	ConsistencyTest	NeuroLang does not check consistency
@@ -65,15 +62,15 @@ approved/sameClassAs/Manifest004	PositiveEntailmentTest	intersectionOf other tha
 approved/sameClassAs/Manifest005	NegativeEntailmentTest	premises use owl:cardinality
 approved/samePropertyAs/Manifest001	PositiveEntailmentTest	premises use owl:samePropertyAs
 approved/samePropertyAs/Manifest002	PositiveEntailmentTest	premises use owl:samePropertyAs
-approved/samePropertyAs/Manifest003	PositiveEntailmentTest	premises use rdfs:subPropertyOf
-approved/samePropertyAs/Manifest004	PositiveEntailmentTest	premises use rdfs:domain
+approved/samePropertyAs/Manifest003	PositiveEntailmentTest	conclusion uses owl:samePropertyAs (TBox)
+approved/samePropertyAs/Manifest004	PositiveEntailmentTest	premises use owl:FunctionalProperty
 approved/samePropertyAs/Manifest005	PositiveEntailmentTest	premises use owl:FunctionalProperty
 approved/samePropertyAs/Manifest006	PositiveEntailmentTest	premises use owl:samePropertyAs
 approved/unionOf/Manifest001	PositiveEntailmentTest	premises use owl:unionOf
 approved/unionOf/Manifest002	PositiveEntailmentTest	premises use owl:unionOf
 proposed/FunctionalProperty/Manifest005	PositiveEntailmentTest	premises use owl:FunctionalProperty
-proposed/I5.24/Manifest002	PositiveEntailmentTest	premises use rdfs:range
-proposed/I5.24/Manifest003	PositiveEntailmentTest	premises use rdfs:range
+proposed/I5.24/Manifest002	PositiveEntailmentTest	premises use rdf:Property
+proposed/I5.24/Manifest003	PositiveEntailmentTest	conclusion is an axiom on classes (TBox)
 proposed/cardinality/Manifest006	PositiveEntailmentTest	intersectionOf other than as a superclass
 proposed/oneOf/Manifest004	PositiveEntailmentTest	premises use rdf:List
 proposed/sameClassAs/Manifest006	PositiveEntailmentTest	conclusion uses owl:unionOf (TBox)
