@@ -22,7 +22,9 @@ are existential variables.  A positive entailment test passes if the query
 is true (its atoms are certain answers), a negative one if it is false.
 
 ``skipped.tsv`` lists every other test of the two archives with the reason it
-is left out, as the test module's ``classify`` gives it: NeuroLang does not
+is left out: its type, or the first construct that the test module's
+``classify`` (premises) or ``conclusion_atoms`` (conclusion) rejects, applied
+to the full archives.  In short: NeuroLang does not
 check consistency; it does not read ``owl:imports``, cardinalities, property
 axioms (domain, range, inverse, functional, transitive, symmetric,
 subproperties), equality of individuals or classes, ``unionOf``,

@@ -339,12 +339,15 @@ dead rewritings: the 522 ``someValuesFrom`` restrictions on ``measures``
 give as many ``aux_i(s, c)`` for the first atom, the subclasses of working
 memory and the restrictions to them as many atoms for the second, and
 XRewrite explores their 26,600 pairs.  Dropping the dead ones leaves 224 to
-explore, and the query takes 27 s, most of it in building the rewritings
+explore, and the query takes 24 s, most of it in building the rewritings
 that are then dropped.  A query of three such atoms, ``ans(s) :-
 cogpo:has_contrast(s, x), cogat:measures(x, c), cogat:CAO_00487(c)``
-(the tasks with a contrast that measures some response inhibition),
-did not end within 16 minutes: the dead rewritings are dropped, but the
-live ones still multiply across the three atoms.
+(the tasks with a contrast that measures some response inhibition), did
+not end within 16 minutes.  In its first 210 s the rewritings kept no more
+than three atoms and grew to 2,826, while 146,000 more were built and
+dropped as dead: the time goes into building rewritings that are then
+dropped.  Testing a rewriting step for this before building its result is
+the next step.
 
 Outside these assumptions the answers stay sound.  On 480 more random
 queries, of up to 4 atoms, over ontologies with ``hasValue`` and, for half
@@ -356,8 +359,10 @@ One more limit concerns rules.  XRewrite rewrites each rule of the program
 on its own, so an unnamed value does not pass from one rule to another:
 with ``heads(x, y) :- headOf(x, y)``, ``ans(x) :- heads(x, y)`` returns Ana
 and not Juan, as ``y`` is in the head of ``heads``.  ``heads(x) :- headOf(x,
-y)`` returns both.  These assumptions delimit the guarantee: complete
-answers for Horn ontologies without constants reached through
+y)`` returns both.  A class defined by a rule over a probabilistic
+predicate, as ``Dean(x) :- p(x)`` with ``p`` a probabilistic fact, gives no
+instance to the constraints of a deterministic query.  These assumptions
+delimit the guarantee: complete answers for Horn ontologies without constants reached through
 ``allValuesFrom``, for queries whose rewriting ends.
 
 Negation and aggregation
