@@ -37,6 +37,11 @@ def main(argv=None) -> None:
                   "(needs the internet)", "staging", "out")
     sub.add_argument("--jobs", type=int, default=6)
     sub.add_argument("--most", type=int, default=40)
+    sub = command("osf", "the files of an OSF project into FOLDER, checked "
+                  "by their md5 (needs the internet)")
+    sub.add_argument("project")
+    sub.add_argument("folder", type=Path)
+    sub.add_argument("--jobs", type=int, default=6)
     tasks(command("structural", "a worker parcellating the connectomes of "
                   "STAGING into OUT", "work", "staging", "out"), False)
     tasks(command("functional", "a task of the functional connectivity of "
@@ -61,6 +66,9 @@ def main(argv=None) -> None:
     elif args.command == "download":
         from .download import run
         run(args.staging, args.out, args.jobs, args.most)
+    elif args.command == "osf":
+        from .osf import run
+        run(args.project, args.folder, args.jobs)
     elif args.command == "structural":
         from .structural import run
         run(args.work, args.staging, args.out, args.task)
