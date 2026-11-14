@@ -1496,7 +1496,9 @@ def _load_deterministic_atlas(
     info = _ATLAS_REGISTRY[kind]
     fetch_kw = {
         k: v for k, v in params.items()
-        if k not in ("predicate_name", "activated", "covered", "points", "kind")
+        if k not in (
+            "predicate_name", "activated", "covered", "points", "kind"
+        )
     }
     fetch_kw["data_dir"] = str(data_dir)
 
