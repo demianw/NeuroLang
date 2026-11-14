@@ -126,7 +126,10 @@ def fit(tractograms: list, hcp: Path, most: int = 50_000) -> np.ndarray:
         subject = Path(path).name.split(".")[0]
         soft, affine = soft_white_matter(
             hcp / subject / "MNINonLinear" / "wmparc.nii.gz")
-        data.append((points(Path(path), most), soft, affine))
+        xyz = points(Path(path), most)
+        chosen = np.random.default_rng(0).choice(
+            len(xyz), min(500_000, len(xyz)), replace=False)
+        data.append((xyz[chosen], soft, affine))
 
     def loss(parameters):
         matrix = to_matrix(parameters)
