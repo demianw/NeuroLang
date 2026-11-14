@@ -515,9 +515,12 @@ and no individual of ``cogat:CAO_00487`` or ``cogat:CAO_00872``.
 The closed world is computed on the same engine with the constraints
 removed and ``cogpo:has_contrast``, ``cogat:measures`` and
 ``cogat:CAO_00487`` as empty relations: the plain Datalog reading of the
-same rules.  The results were computed on 14 November 2026 with NeuroLang
-master ``37acbf99`` merged with #1250 (``1d49ac93``), one query at a time;
-each time includes the compilation of the query.
+same rules.  The results were computed on 14 and 15 November 2026 with
+NeuroLang ``2e04ffd5``, the head of #1268, which is stacked on #1263; the
+open-world results of this section need both.  The queries ran one at a
+time, after a first query on the ontology that also prepares its
+constraints, in about 5 s; each time includes the compilation of the
+query.
 
 **Which studies measure response inhibition?**  The question, as a query:
 
@@ -542,18 +545,18 @@ same rule for ``cogat:CAO_00872``:
      - Why
    * - ``has_contrast(s, x)``
      - 0 (no rows), 0.3 s
-     - 139 rows, 3.4 s
+     - 139 rows, 2.5 s
      - every Stroop task has some contrast
    * - ``has_contrast(s, x), CAO_01515(x)``
      - not run
-     - 139 rows, 15.1 s
+     - 139 rows, 2.1 s
      - that contrast is an incongruent − congruent one
    * - ``inhibition_study(s)``
      - 0 (no rows), 0.5 s
-     - did not end within 2,400 s
-     - the rewriting of three atoms does not end in time
+     - 139 rows, 3.4 s
+     - that contrast measures some response inhibition
 
-.. list-table:: Open world, ``has_contrast(s, x)``: first rows (139 rows)
+.. list-table:: Open world, ``inhibition_study(s)``: first rows (139 rows)
    :header-rows: 1
    :widths: 15 85
 
@@ -577,15 +580,10 @@ same rule for ``cogat:CAO_00872``:
    * - …
      - 139 rows
 
-The first two steps find, through an unnamed contrast, the 139 studies the
-closed world cannot.  The curators stated one axiom; they did not enter 139
-contrasts.  By the two axioms, the same 139 studies are the certain answers
-of ``inhibition_study(s)``: the contrast of each measures some response
-inhibition.  This follows from the axioms, checked with rdflib; the engine
-did not compute it.  The rewriting of the three-atom query explores more
-rewritings than it can within the time, as the section *When the answers
-are complete* describes for the same query with one instance of a
-contrast.
+The open world finds, through an unnamed contrast that measures an unnamed
+response inhibition, the 139 studies the closed world cannot; they are,
+as a set, the studies that mention ``'stroop task'``.  The curators stated
+two axioms; they did not enter 139 contrasts, nor 139 measurements.
 
 **Which form of response inhibition did each one measure?**  In the open
 world:
@@ -620,13 +618,13 @@ and, with the same first four rules, the studies that mention such a task,
      - Rows, time
      - Why
    * - open world, ``ans(s, c)``
-     - 0 (no rows), 181.7 s
+     - 0 (no rows), 2.2 s
      - each study's response inhibition is an unnamed value
    * - closed world, tasks ``ans(t, n, m)``
-     - 7 rows, 5.8 s
+     - 7 rows, 6.1 s
      - the class axioms, read as facts, name the concept
    * - closed world, studies ``ans(s, n)``
-     - 139 rows, 6.4 s
+     - 139 rows, 6.5 s
      - of the 7 task names, only ``'stroop task'`` is a Neurosynth term
 
 .. list-table:: Closed world, ``ans(t, n, m)`` (7 rows)
@@ -669,11 +667,63 @@ the ontology decides which tasks count: a curator who gives another task a
 contrast that measures response inhibition changes the answer without
 changing the query.  Of the 7 task names above, only ``'stroop task'`` is
 in the Neurosynth vocabulary; hence on Neurosynth the example shows the
-mechanism, not a gain in recall.  The vocabulary of the ``neurostore``
-engine has five of them: its TF-IDF table puts ``'stroop task'`` above the
-threshold of ``mentions`` in 444 studies, and the five names in 742.  The
-open-world query was not run there, as it does not end on Neurosynth with
-one task.
+mechanism, not a gain in recall.
+
+The vocabulary of the ``neurostore`` engine has five of them.  One rule
+per task gives each class its instances; the query is the same
+``inhibition_study(s)``:
+
+.. code-block:: neurolang
+
+   % the five tasks of the Atlas with a contrast that measures response
+   % inhibition, (IV), whose name is a NeuroStore term
+   cogat:CAO_00872(s) :- mentions(s, 'stroop task')
+   cogat:CAO_00707(s) :- mentions(s, 'color word stroop')
+   cogat:CAO_00864(s) :- mentions(s, 'simon task')
+   cogat:CAO_00827(s) :- mentions(s, 'nogo task')
+   cogat:CAO_00810(s) :- mentions(s, 'choice reaction time')
+   inhibition_study(s) :- cogpo:has_contrast(s, x), cogat:measures(x, c), cogat:CAO_00487(c)
+   ans(s) :- inhibition_study(s)
+
+Here ``cogat:CAO_00707`` is the color-word Stroop task,
+``cogat:CAO_00864`` the Simon task, ``cogat:CAO_00827`` the go/no-go task
+and ``cogat:CAO_00810`` the choice reaction time task; each has, in the
+Atlas, a contrast that measures response inhibition.
+
+.. list-table:: NeuroStore: one concept-level query against the mentions
+   :header-rows: 1
+   :widths: 50 25 25
+
+   * - Query
+     - Rows
+     - Time
+   * - ``mentions(s, 'stroop task')``
+     - 444
+     - 5.0 s
+   * - ``mentions(s, 'color word stroop')``
+     - 57
+     - 5.1 s
+   * - ``mentions(s, 'simon task')``
+     - 62
+     - 5.0 s
+   * - ``mentions(s, 'nogo task')``
+     - 196
+     - 5.0 s
+   * - ``mentions(s, 'choice reaction time')``
+     - 41
+     - 4.9 s
+   * - the union of the five, one rule per term
+     - 742
+     - 5.4 s
+   * - open world, ``inhibition_study(s)``
+     - 742
+     - 8.8 s
+
+The open-world query returns, as a set, the union of the five mentions:
+298 studies more than ``'stroop task'`` alone.  Nothing in the query names
+a task; the Atlas chose the five.  The time of the open-world query
+includes the preparation of the constraints, as it was the first query on
+the ontology of its session.
 
 **Where in the brain?**  The open-world predicate as the condition of a
 probabilistic query:
@@ -698,21 +748,16 @@ response inhibition, reports a peak within 6 mm of the voxel
      - Rows, time
      - Why
    * - closed world
-     - 0 (no rows), 5.1 s
+     - 0 (no rows), 4.4 s
      - the condition holds of no study
    * - open world
-     - did not end within 2,400 s
-     - its condition is the three-atom query above
+     - 1,296,985 voxels with ``p > 0``, 20.1 s
+     - its condition holds of the 139 Stroop studies
 
-The certain answers of the condition are the 139 Stroop studies.  Hence
-the same conditional over ``mentions(s, 'stroop task')``,
-``p_active_given_stroop(i, j, k, PROB) :- (activated(i, j, k, s) &
-selected_study(s)) // (mentions(s, 'stroop task') & selected_study(s))``,
-gives what the open-world query owes: 1,296,985 voxels with ``p > 0``, in
-14.2 s.  Its highest ``p`` in each region of the Destrieux atlas, with the
-MNI coordinates of the voxel that reaches it, are:
+The highest ``p`` of the open-world map in each region of the Destrieux
+atlas, with the MNI coordinates of the voxel that reaches it, are:
 
-.. list-table:: ``p_active_given_stroop``, the six Destrieux regions with the highest ``p``
+.. list-table:: ``p_active_given_inhibition``, open world: the six Destrieux regions with the highest ``p``
    :header-rows: 1
 
    * - Destrieux region
@@ -737,7 +782,9 @@ MNI coordinates of the voxel that reaches it, are:
      - (−6, 12, 48)
      - 0.137
 
-The highest, 0.180, is 25 of the 139 studies.
+The highest, 0.180, is 25 of the 139 studies.  As the condition holds of
+the studies that mention ``'stroop task'``, the map is, voxel by voxel, the
+conditional over ``mentions(s, 'stroop task')``.
 
 **What the curators did not state.**  The stop signal task,
 ``cogat:CAO_00871``, has six contrasts in the Atlas, and none has a
@@ -758,10 +805,10 @@ The highest, 0.180, is 25 of the 139 studies.
      - Rows, time
      - Why
    * - closed world, ``mentions(s, 'stop signal')``
-     - 99 rows, 2.3 s
+     - 99 rows, 2.1 s
      - the term is in their abstracts
    * - open world, ``inhibition_study(s)``
-     - 0 (no rows), 1.8 s
+     - 0 (no rows), 1.9 s
      - no stop signal contrast measures anything in the Atlas
 
 Non-exhaustiveness is allowed; missing knowledge is not filled in.  The
@@ -782,11 +829,10 @@ defined by a rule over a probabilistic predicate gives no instance to the
 constraints of a deterministic query (same section).
 
 In short, the open world lets the curators of an ontology be
-non-exhaustive.  On (IV), one axiom stated once gave 139 studies a contrast
-that no one entered, and only what was never stated stayed out of reach.
-The three-atom chain is entailed but not yet computed: a rewriting that
-ends on it, as the section *When the answers are complete* calls for, would
-confirm it.
+non-exhaustive.  On (IV), two axioms stated once gave 139 Neurosynth
+studies a contrast that measures response inhibition, which no one entered;
+on NeuroStore, the same query over five tasks returned 742 studies.  Only
+what was never stated stayed out of reach.
 
 What would confirm and what limits this
 ---------------------------------------
