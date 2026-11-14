@@ -686,7 +686,7 @@ per task gives each class its instances; the query is the same
    ans(s) :- inhibition_study(s)
 
 Here ``cogat:CAO_00707`` is the color-word Stroop task,
-``cogat:CAO_00864`` the Simon task, ``cogat:CAO_00827`` the go/no-go task
+``cogat:CAO_00864`` the Simon task, ``cogat:CAO_00827`` the go-no-go task
 and ``cogat:CAO_00810`` the choice reaction time task; each has, in the
 Atlas, a contrast that measures response inhibition.
 
@@ -782,9 +782,9 @@ atlas, with the MNI coordinates of the voxel that reaches it, are:
      - (−6, 12, 48)
      - 0.137
 
-The highest, 0.180, is 25 of the 139 studies.  As the condition holds of
-the studies that mention ``'stroop task'``, the map is, voxel by voxel, the
-conditional over ``mentions(s, 'stroop task')``.
+The highest, 0.180, is 25 of the 139 studies.  The condition holds of the
+same 139 studies as ``mentions(s, 'stroop task')``; hence the map is that
+of the conditional over it.
 
 **What the curators did not state.**  The stop signal task,
 ``cogat:CAO_00871``, has six contrasts in the Atlas, and none has a
