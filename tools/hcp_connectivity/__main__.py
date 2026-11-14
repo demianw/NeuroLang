@@ -42,6 +42,10 @@ def main(argv=None) -> None:
     sub.add_argument("project")
     sub.add_argument("folder", type=Path)
     sub.add_argument("--jobs", type=int, default=6)
+    sub = command("check-space", "whether a tractogram is in the MNI space "
+                  "of its HCP subject's segmentation", "tractogram", "hcp")
+    sub.add_argument("--subject")
+    sub.add_argument("--shift", type=int, default=3)
     tasks(command("structural", "a worker parcellating the connectomes of "
                   "STAGING into OUT", "work", "staging", "out"), False)
     tasks(command("functional", "a task of the functional connectivity of "
@@ -66,6 +70,9 @@ def main(argv=None) -> None:
     elif args.command == "download":
         from .download import run
         run(args.staging, args.out, args.jobs, args.most)
+    elif args.command == "check-space":
+        from .space import run
+        run(args.tractogram, args.hcp, args.subject, args.shift)
     elif args.command == "osf":
         from .osf import run
         run(args.project, args.folder, args.jobs)
