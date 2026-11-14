@@ -13,18 +13,18 @@
 assistant_examples:
   - question: Which NeuroStore studies were annotated with the concept working memory? Give their titles.
     datalog: |-
-      ans(study, title) :- study_concept(study, 'working memory'), study_title(study, title)
+      ans(study_id, title) :- study_concept(study_id, 'working memory'), study_title(study_id, title)
 
   - question: Which cognitive domains do the studies about cancelling a planned response when a stop signal appears belong to?
     datalog: |-
       close(q, s) :- similar_study(q, s), selected_study(s)
       domain(s, dm) :- study_domain(s, dm), selected_study(s)
       p_domain_given_close(q, dm, PROB) :- domain(s, dm) // close(q, s)
-      ans(domain, probability) :- p_domain_given_close('a planned response must be cancelled when a stop signal appears', domain, probability)
+      ans(domain_name, probability) :- p_domain_given_close('a planned response must be cancelled when a stop signal appears', domain_name, probability)
 
   - question: Which studies are about working memory, by its Cognitive Atlas definition, without being annotated with it?
     datalog: |-
-      ans(study) :- cogat_definition('working memory', d), similar_study(d, study), ~study_concept(study, 'working memory')
+      ans(study_id) :- cogat_definition('working memory', d), similar_study(d, study_id), ~study_concept(study_id, 'working memory')
 
   - question: Which voxels do the studies of the domain executive cognitive control activate?
     datalog: |-
@@ -37,5 +37,5 @@ assistant_examples:
       close(q, s) :- similar_study(q, s), selected_study(s)
       concept(s, c) :- study_concept(s, c), selected_study(s)
       p_concept_given_close(q, c, PROB) :- concept(s, c) // close(q, s)
-      ans(concept, probability) :- p_concept_given_close('holding information in mind over a delay', concept, probability)
+      ans(concept_name, probability) :- p_concept_given_close('holding information in mind over a delay', concept_name, probability)
 

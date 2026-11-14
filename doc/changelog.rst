@@ -20,15 +20,16 @@ Unreleased
 **New features:**
 
 * The query assistant names the columns of its answers after what they
-  hold, ``ans(region, probability)`` rather than ``ans(l, p)``, and gives
-  the entities an answer is computed over that the question names (the
-  regions at the ends of a tract, the parcels of a network) as answers of
-  their own, named queries ``ans[name](...)``: its syntax reference and
-  ReAct steps say so, and the examples of the banks are rewritten so
-  (a test checks their column names).  New example on ``neurosynth_iit``:
-  the Bayes factor of the cognitive tasks mentioned in the studies
-  activating the regions at both ends of the left uncinate fasciculus,
-  with these regions.
+  hold, ``ans(region, probability)`` rather than ``ans(l, p)``, unlike the
+  predicates (``study_id``, not ``study``), and gives the entities an
+  answer is computed over that the question names (the regions at the
+  ends of a tract, the parcels of a network) as answers of their own,
+  named queries ``ans[name](...)``: its syntax reference and ReAct steps
+  say so, and the examples of the banks are rewritten so (a test checks
+  their column names against the predicates').  New example on
+  ``neurosynth_iit``: the Bayes factor of the cognitive tasks mentioned in
+  the studies activating the regions at both ends of the left uncinate
+  fasciculus, with these regions.
 
 * Ontologies: the constraints without existential variables (subclass,
   ``allValuesFrom``, ``hasValue``, annotations) are applied by the chase, as

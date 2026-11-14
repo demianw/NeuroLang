@@ -68,6 +68,7 @@ def test_banks_are_inherited():
 
 
 ANSWER_HEAD = re.compile(r"^\s*ans\s*(?:\[\s*\w+\s*\])?\s*\(([^)]*)\)", re.M)
+RULE_HEAD = re.compile(r"^\s*([\w:]+)\s*\(", re.M)
 VOXEL_INDICES = {"i", "j", "k"}
 
 
@@ -75,18 +76,26 @@ VOXEL_INDICES = {"i", "j", "k"}
 def test_bank_answers_name_their_columns(engine):
     """
     The columns of the answers of the examples say what they hold,
-    ans(region, probability) and not ans(l, p): the model writes its
-    answers as the examples do. The voxel indices keep their names.
+    ans(region, probability) and not ans(l, p), and are not named as a
+    predicate of the engine or a rule of the example, study_id and not
+    study: the model writes its answers as the examples do. The voxel
+    indices keep their names.
     """
-    short = []
+    from neurolang_apps.utils import engine_registry
+
+    predicates = set(engine_registry.get_predicates(engine))
+    wrong = []
     for example in load_examples(engine):
-        heads = ANSWER_HEAD.findall(example.query("datalog") or "")
+        query = example.query("datalog") or ""
+        heads = ANSWER_HEAD.findall(query)
         assert heads, example.question
+        taken = predicates | set(RULE_HEAD.findall(query))
         for head in heads:
             names = {n.strip() for n in head.split(",") if n.strip()}
-            if any(len(n) == 1 for n in names - VOXEL_INDICES):
-                short.append(f"{example.question}: ans({head})")
-    assert not short, "\n".join(short)
+            if any(len(n) == 1 for n in names - VOXEL_INDICES) \
+                    or names & taken:
+                wrong.append(f"{example.question}: ans({head})")
+    assert not wrong, "\n".join(wrong)
 
 
 def test_engines_without_bank():

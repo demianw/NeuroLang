@@ -50,4 +50,4 @@ def test_neurostore_iit_has_the_questions_of_the_bundles():
     assert bank[:-3] == load_examples("neurostore_tracts")
     assert bank[-3:] == load_examples("neurosynth_iit")[-3:]
     assert bank[-3].queries["datalog"] == \
-        'ans(streamline) :- uf(streamline, "left")'
+        'ans(streamline_index) :- uf(streamline_index, "left")'

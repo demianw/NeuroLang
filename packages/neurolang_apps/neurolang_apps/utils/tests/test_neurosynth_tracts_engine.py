@@ -321,7 +321,7 @@ def test_the_engine_of_the_page_has_its_own_questions():
     assert bank[:-3] == load_examples("neurosynth_tracts")
     assert "uncinate" in bank[-3].question
     assert bank[-3].queries["datalog"] == \
-        'ans(streamline) :- uf(streamline, "left")'
+        'ans(streamline_index) :- uf(streamline_index, "left")'
     # The regions at both ends of the bundle are an answer of their own.
     assert "ans[uf_end_regions]" in bank[-1].queries["datalog"]
 

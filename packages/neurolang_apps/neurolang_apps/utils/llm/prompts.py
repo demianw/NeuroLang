@@ -55,19 +55,20 @@ DATALOG_REFERENCE = """\
 NeuroLang Datalog: a program is a sequence of rules `head :- body`, one
 per line; the query is the rule whose head is `ans(...)`.
 - The variables of `ans` name the columns of the answer: name them after
-  what they hold, `ans(region, probability)`, not `ans(l, p)`. A
+  what they hold, `ans(region, probability)`, not `ans(l, p)`, and
+  unlike the predicates and functions: `study_id`, not `study`. A
   column computed in a head (an aggregation, a percentile) has no name:
   compute it in a rule of its own, which `ans` reads with named
   variables.
 - Several answers are named queries, `ans[name](...)`, one per kind of
   rows: `ans[parcels](parcel) :- ...` and
-  `ans[concepts](concept, probability) :- ...`.
+  `ans[concepts](concept_name, probability) :- ...`.
 - Variables are lower-case identifiers; numbers are written as is.
 - {strings}.
-- The body is a conjunction separated by `,`: `ans(study) :-
-  study(study), mentions(study, 'pain')`. Disjunction with `|`, looser
-  than `,`: `ans(study) :- (mentions(study, 'pain') |
-  mentions(study, 'ache')), study(study)`.
+- The body is a conjunction separated by `,`: `ans(study_id) :-
+  study(study_id), mentions(study_id, 'pain')`. Disjunction with `|`,
+  looser than `,`: `ans(study_id) :- (mentions(study_id, 'pain') |
+  mentions(study_id, 'ache')), study(study_id)`.
 - Negation: `~mentions(s, 'pain')`; its variables must be bound by a
   positive atom of the body.
 - Comparisons and arithmetic in parentheses: `(w > 0.1)`, `(c != 0)`,
@@ -91,14 +92,15 @@ per line; the query is the rule whose head is `ans(...)`.
   single atom (define a conjunction in a rule first), grouped by the
   variables other than the aggregated one:
   `term_count(t, n) :- AGGREGATE[t](mentions(s, t) @ count(s)) = n` and
-  `ans(term, studies) :- term_count(term, studies)`; without group
+  `ans(term_name, studies) :- term_count(term_name, studies)`; without group
   `AGGREGATE[](study(s) @ count(s)) = n` (count, sum, max, min, mean).
 - Probabilities over probabilistic relations (e.g. a probabilistic
-  choice): `ans(term, probability) :-
-  PROB[mentioned_term(term)] = probability`, conditional
+  choice): `ans(term_name, probability) :-
+  PROB[mentioned_term(term_name)] = probability`, conditional
   `PROB[a(x) // b(x)] = p`; a probability can be compared like any value:
-  `ans(term, bayes_factor) :- bayes_factor(term, bayes_factor),
-  (bayes_factor > 3.16)`.
+  `ans(term_name, bayes_factor_value) :-
+  bayes_factor(term_name, bayes_factor_value),
+  (bayes_factor_value > 3.16)`.
 - Distances: `(euclidean(i, j, k, 74, 130, 52) < 6)` keeps the points
   within 6 of a point; between the points of two relations it is fast
   only when both are stored relations, not rules.

@@ -24,4 +24,4 @@ assistant_examples:
       about(t, s) :- concept_definition(t, d), similar_study(d, s), selected_study(s)
       p_concept_given_uf(t, PROB) :- about(t, s) // uf_study(s)
       ans[uf_parcels](parcel) :- uf_parcel(parcel)
-      ans[concepts](concept, probability) :- p_concept_given_uf(concept, probability)
+      ans[concepts](concept_name, probability) :- p_concept_given_uf(concept_name, probability)
