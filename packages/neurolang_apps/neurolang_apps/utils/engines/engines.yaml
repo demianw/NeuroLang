@@ -643,6 +643,10 @@ engines:
     # within the time and memory the query assistant gives it.
     resamplings:
       boot_studies: {n: 200}
+    # The 95th percentile of the null of doc/similarity_calibration.rst
+    # over NeuroStore's studies (0.75 lets 9% of it through).
+    text_embeddings:
+      study_abstracts: {similarity_gate: 0.76}
     sorts:
       study:
         type: str
