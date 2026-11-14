@@ -50,6 +50,14 @@ def main(argv=None) -> None:
                   "tractograms onto their MNINonLinear segmentations",
                   "hcp", "out")
     sub.add_argument("tractograms", type=Path, nargs="+")
+    sub = command("dense", "a dense tractogram of at most --megabytes MB "
+                  "and its subjects' segmentation", "trk_dir", "hcp", "out")
+    sub.add_argument("--name", default="disconnectome7t")
+    sub.add_argument("--subjects", type=int, default=20)
+    sub.add_argument("--affine", type=Path)
+    sub.add_argument("--minimum-length", type=float, default=30)
+    sub.add_argument("--tolerance", type=float, default=0.5)
+    sub.add_argument("--megabytes", type=float, default=480)
     tasks(command("structural", "a worker parcellating the connectomes of "
                   "STAGING into OUT", "work", "staging", "out"), False)
     tasks(command("functional", "a task of the functional connectivity of "
@@ -77,6 +85,10 @@ def main(argv=None) -> None:
     elif args.command == "check-space":
         from .space import run
         run(args.tractogram, args.hcp, args.subject, args.shift)
+    elif args.command == "dense":
+        from .dense import run
+        run(args.trk_dir, args.hcp, args.out, args.name, args.subjects,
+            args.affine, args.minimum_length, args.tolerance, args.megabytes)
     elif args.command == "fit-space":
         import numpy as np
 
