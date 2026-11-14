@@ -333,6 +333,19 @@ Unreleased
   ``cogat_definition('memory', d), similar_study(d, s),
   study_journal(s, 'Neuron')``, which took 70 s instead of 3 s.
 
+**Changes:**
+
+* ``similar_study(q, s)``, the studies about a text, keeps the top 5% of
+  the studies closest to it only above a similarity floor,
+  ``similarity_floor`` of the engine's ``text_embeddings`` entry (0.75 by
+  default): a text that no study is about, as 'stock market crash', got
+  its 719 studies.  Its 95th percentile is the function
+  ``query_similarity_cutoff(q)``, computed once per text, rather than the
+  aggregation ``cutoff_similarity``, removed: the studies of a Cognitive
+  Atlas definition in the journal Neuron per year take 1.4 s instead of
+  70 s.  *Choosing the similarity threshold* in
+  :doc:`tutorial_text_embeddings` describes how to calibrate the floor.
+
 
 v0.1a22 (2026-11-13)
 --------------------
