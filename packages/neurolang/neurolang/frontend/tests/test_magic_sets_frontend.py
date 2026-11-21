@@ -3,8 +3,10 @@
 import numpy as np
 import pandas as pd
 import pytest
+from nl_core.datalog import magic_sets
 
 from ...frontend import NeurolangDL
+from ...frontend import probabilistic_frontend, query_resolution_datalog
 from ...frontend.probabilistic_frontend import NeurolangPDL
 
 
@@ -473,7 +475,7 @@ def _lower(text: str) -> str:
     return text.lower()
 
 
-def _similar_study_engine(frontend=NeurolangPDL):
+def _similar_study_engine(frontend=NeurolangPDL, similarity=None):
     """
     The ``similar_study`` of the engine neurosynth, its similarity a stub:
     its text ``q`` is bound only through its head, by the rules using it.
@@ -489,7 +491,9 @@ def _similar_study_engine(frontend=NeurolangPDL):
     nl.add_tuple_set(
         [(0, "a"), (1, "a"), (3, "a"), (4, "b")], name="act"
     )
-    nl.add_symbol(_rank_similarity, name="query_similarity")
+    nl.add_symbol(
+        similarity or _rank_similarity, name="query_similarity"
+    )
     nl.add_symbol(lambda q: .5, name="query_similarity_cutoff")
     nl.add_symbol(_lower, name="lcase")
     nl.execute_datalog_program(
@@ -532,6 +536,46 @@ def test_frontend_similar_study_bound_from_its_rule_body(frontend, program):
 
 
 @pytest.mark.parametrize("frontend", [NeurolangDL, NeurolangPDL])
+@pytest.mark.parametrize("body", [
+    "task(t), definition(t, d), similar_study(d, s)",
+    "definition(t, d), task(t), similar_study(d, s)",
+    "similar_study(d, s), definition(t, d), task(t)",
+    # the constant binds first, and restricts task
+    "task(t), term(t, 'stroop task'), definition(t, d), "
+    "similar_study(d, s)",
+])
+def test_frontend_similar_study_bound_after_the_rule_restricting_it(
+    frontend, body
+):
+    """
+    ``definition(t, d)`` binds the text of ``similar_study`` after
+    ``task(t)``, a rule without a constant, restricts ``t``: the
+    similarity is computed for the stroop task's text alone, not for
+    every definition (``similar_study`` was seeded with every text of
+    ``definition``, put first).
+    """
+    texts = set()
+
+    def query_similarity(text: str, study: int) -> float:
+        texts.add(text)
+        return _rank_similarity(text, study)
+
+    nl = _similar_study_engine(frontend, query_similarity)
+    nl.add_tuple_set(
+        [("t1", "a text"), ("t2", "another text")] +
+        [(f"u{i}", f"unrelated text {i}") for i in range(20)],
+        name="definition",
+    )
+    res = nl.execute_datalog_program(
+        "task(t) :- term(t, 'stroop task')\n"
+        f"uses(s) :- {body}\n"
+        "ans(count(s)) :- uses(s)"
+    )
+    assert res.as_pandas_dataframe().values.tolist() == [[4]]
+    assert texts == {"a text"}
+
+
+@pytest.mark.parametrize("frontend", [NeurolangDL, NeurolangPDL])
 def test_frontend_similar_study_when_magic_sets_are_unstratified(frontend):
     """
     Bound, ``u`` would be in a cycle with a negation of the rewritten
@@ -562,6 +606,30 @@ def test_frontend_similar_study_when_magic_sets_are_unstratified(frontend):
     ]
 
 
+@pytest.mark.parametrize("frontend", [NeurolangDL, NeurolangPDL])
+def test_frontend_rewrite_not_seeded_only_when_it_binds_more(
+    frontend, monkeypatch
+):
+    """
+    Not seeding from the stored relations only binds less: when the
+    seeded rewrite binds nothing, the query is solved as it is, without
+    trying the rewrite again unseeded.
+    """
+    seeds = []
+
+    def recording(query, datalog, seed_from_edb=True):
+        seeds.append(seed_from_edb)
+        return magic_sets.magic_rewrite(query, datalog, seed_from_edb)
+
+    for module in (probabilistic_frontend, query_resolution_datalog):
+        monkeypatch.setattr(module, "magic_rewrite", recording)
+    nl = frontend()
+    nl.add_tuple_set([("1", "a"), ("2", "b")], name="r")
+    res = nl.execute_datalog_program("ans(x, y) :- r(x, y)")
+    assert len(res.as_pandas_dataframe()) == 2
+    assert seeds == [True]
+
+
 @pytest.mark.parametrize("program", [
     "p_similar(q, PROB) :- similar_study(q, s) & selected_study(s)\n"
     "texts(d, p) :- definition(t, d), p_similar(d, p)\n"
@@ -585,3 +653,86 @@ def test_frontend_similar_study_bound_through_probabilities(program):
         {"a text": 4 / 6 if "p_similar" in program else 1 / 4,
          "another text": 4 / 6 if "p_similar" in program else 1 / 4}
     )
+
+
+def _rewrite_outcomes(monkeypatch):
+    """The exception class name, or None, of each rewrite attempt."""
+    from nl_core.datalog import magic_sets
+    outcomes = []
+    rewrite = magic_sets._magic_rewrite
+
+    def recorded(*args):
+        try:
+            result = rewrite(*args)
+        except Exception as error:
+            outcomes.append(type(error).__name__)
+            raise
+        outcomes.append(None)
+        return result
+
+    monkeypatch.setattr(magic_sets, "_magic_rewrite", recorded)
+    return outcomes
+
+
+@pytest.mark.parametrize("frontend", [NeurolangDL, NeurolangPDL])
+def test_frontend_solves_unrewritten_a_recursion_of_the_rewrite(
+    frontend, monkeypatch
+):
+    """
+    ``a`` reads ``p`` then ``q``, ``b`` ``q`` then ``p``: bound, they share
+    adorned and magic predicates which depend on each other, a recursion
+    the program does not have. The query is solved unrewritten, after one
+    rewrite: not again without seeding from the stored relations.
+    """
+    nl = frontend()
+    nl.add_tuple_set([(0, 0), (0, 1), (1, 2)], name="ep")
+    nl.add_tuple_set([(0,), (1,)], name="eq")
+    nl.execute_datalog_program(
+        "p(x, y) :- ep(x, y)\n"
+        "q(x) :- eq(x)\n"
+        "a(x) :- p(x, y), q(y)\n"
+        "b(x) :- q(x), p(x, y)\n"
+        "c(x) :- a(x), b(x)"
+    )
+    outcomes = _rewrite_outcomes(monkeypatch)
+    res = nl.execute_datalog_program("ans(y) :- c(0), ep(0, y)")
+    assert outcomes == ["NewRecursionInMagicSetsRewriteError"]
+    assert set(res.as_pandas_dataframe().iloc[:, 0]) == {0, 1}
+
+
+def test_frontend_keeps_the_rewrite_a_similarity_needs(monkeypatch):
+    """
+    The similarity of a query text to a study is a relation over the
+    texts the rules using it bind (``q`` of ``sim`` is bound only through
+    the head), and the magic predicate of its percentile depends on it:
+    the rewrite has a recursion the program does not have. Unrewritten,
+    the program has no answer: the rewrite binding only ``sim`` and
+    ``cutoff`` is kept, recursion and all.
+    """
+    nl = NeurolangPDL()
+    studies = range(6)
+    nl.add_tuple_set([(s,) for s in studies], name="study")
+    nl.add_uniform_probabilistic_choice_over_set(
+        [(s,) for s in studies], name="selected_study"
+    )
+    nl.add_tuple_set([(0, "a"), (1, "a"), (3, "a"), (4, "b")], name="act")
+    nl.add_symbol(_rank_similarity, name="similarity")
+    nl.execute_datalog_program(
+        "sim(q, s, v) :- study(s) & (v == similarity(q, s))\n"
+        "cutoff(q, percentile(v, 50)) :- sim(q, s, v)\n"
+        "similar_study(q, s) :- sim(q, s, v) & cutoff(q, c) & (v >= c)"
+    )
+    outcomes = _rewrite_outcomes(monkeypatch)
+    res = nl.execute_datalog_program(
+        "close(s) :- similar_study('a text', s), selected_study(s)\n"
+        "both(s) :- act(s, 'a'), close(s)\n"
+        "ans(p) :- PROB[both(s) // close(s)] = p"
+    )
+    assert outcomes == ["NewRecursionInMagicSetsRewriteError", None]
+    similarities = [_rank_similarity("a text", s) for s in studies]
+    similar = {
+        s for s, v in zip(studies, similarities)
+        if v >= np.percentile(similarities, 50)
+    }
+    expected = len(similar & {0, 1, 3}) / len(similar)
+    assert res.as_pandas_dataframe().p.tolist() == pytest.approx([expected])

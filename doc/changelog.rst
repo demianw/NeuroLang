@@ -19,6 +19,13 @@ Unreleased
 
 **New features:**
 
+- Brain viewer: the streamlines of a result with one other column, such
+  as ``ans(x, side) :- uncinate(x, side)``, can be coloured by bundle, a
+  colour per value of the column, which a legend names, or by direction,
+  as before; *Colour by* chooses, starting at bundle. The column has 20
+  values at most (``streamlines.max_bundles`` of ``viewer.yaml``); a
+  streamline of several bundles is of the first, in alphabetical order.
+
 - Brain viewer: the views take the width of the page, the 3 slices in a
   row as tall as a third of it allows (340 to 640 px), where they were
   960 by 340 px whatever the page; the options of the display start
@@ -210,6 +217,35 @@ Unreleased
 
 **Performance:**
 
+- ``uses(s) :- ri_task(t), skos:definition(t, d), similar_study(d, s)``
+  computes ``similar_study`` for the definitions of ``ri_task`` alone, as
+  fast as with ``skos:definition`` in a rule of its own: magic sets put
+  ``skos:definition``, which binds ``d``, ahead of ``ri_task``, and the
+  similarity was computed for every definition of the ontology (more
+  than 300 s on the engine neurosynth). The rules sharing the variables
+  of such a stored relation now bind before it, and the literals needing
+  them after it.
+- The magic-sets rewrite of a query over a large program (the tracts of
+  an engine) took most of its time: the relations of the extensional
+  database were built again for each literal checked (15 000 times), and
+  rules were ordered definitions first by reading every body on each pass.
+  A symbol table now keeps the symbols of each type it was asked for until
+  it or a scope enclosing it changes (``symbols_by_type``, so
+  ``extensional_database`` and ``builtins``), and each body is read once. The Fig. 2b query of the bundles co-activated by
+  language studies on neurosynth_iit took 240 to 267 s, now 118 to 120 s,
+  with the same answer.
+  
+- The magic-sets rewrite of the Fig. 2b query (neurosynth_iit) took 18.5 s
+  of its 70 s, now 6.5 s, the rewritten programs of the three engines'
+  questions and examples unchanged. Rules are ordered definitions first
+  in one reading of their bodies, not one comparison of thousands of
+  symbols a pass; ``symbols_by_type`` returns the read-only mapping it
+  keeps rather than a copy, and ``extensional_database`` filters it once
+  while it is kept, not once a literal checked (15 000 times). When the
+  seeded rewrite finds no constant to bind, it is not tried again
+  unseeded, which only binds less (on master before this change, 7 more
+  attempts for each of the 3 answers).
+
 - The semi-naive chase no longer evaluates again a rule with several atoms
   of its stratum's predicates when none of them has new tuples: the rules
   of tract queries rewritten with magic sets, 90 % of whose evaluations
@@ -218,6 +254,23 @@ Unreleased
   derived only when it found some. The chase of the Fig. 2b query of the
   bundles co-activated by language studies (neurosynth_iit) took 46 s in
   1 334 steps, now 30 s in 952.
+
+- Magic sets no longer make a non-recursive program recursive. All the
+  call sites of a predicate with the same bound arguments share one
+  adorned and one magic predicate, which can close a cycle of predicates
+  none of which is recursive (``traverses^bbb`` reads
+  ``magic_traverses^bbb``, which reads ``traverses^bbb``, in the WMQL
+  tract bundles): the program was then one recursive stratum, rule by
+  rule until nothing changed. Such a query is now solved unrewritten,
+  unless it has a predicate bound only through its head
+  (``similar_study``), which needs the rewrite. The rewrite leaves unbound
+  at most one non-recursive predicate whose binding would leave the
+  program unstratified, then gives up; a rewrite given up for a cycle of
+  its own is not tried again without seeding from the stored relations,
+  since binding fewer predicates does not undo the cycle. On
+  ``neurosynth_iit`` at 2 mm, the ``af`` bundle took 22.5 s, now 7.1 s,
+  ``extreme_capsule`` 19.4 s, now 4.3 s, and Fig. 2b's program without
+  its bootstrap 19.4 s, now 14.8 s, with the same answers.
 
 - A choice over a few rows of an engine's view (the voxels of an image) by
   the view reads those rows alone, and a vector over a few of its columns
