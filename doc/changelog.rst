@@ -217,6 +217,17 @@ Unreleased
 
 **Performance:**
 
+- ``similar_study`` and the other rules of ``query_similarity``: the
+  embeddings of query texts are kept on disk, next to the documents', so
+  that a new process reads them rather than embedding the texts again
+  (0.4 s a text with the numpy encoder), and ``query_similarity`` and
+  ``query_similarity_cutoff`` are computed on whole columns (marked
+  ``columnwise``): one product of the documents' embeddings for each
+  distinct text, not a Python call a row. The bank's uncinate query of
+  neurosynth_iit, which compares the 21 definitions of the concepts under
+  'memory' with the studies (301 791 rows), took 19.7 to 20.3 s in a new
+  process, now 12.1 to 12.2 s.
+
 - ``uses(s) :- ri_task(t), skos:definition(t, d), similar_study(d, s)``
   computes ``similar_study`` for the definitions of ``ri_task`` alone, as
   fast as with ``skos:definition`` in a rule of its own: magic sets put
@@ -271,6 +282,16 @@ Unreleased
   ``neurosynth_iit`` at 2 mm, the ``af`` bundle took 22.5 s, now 7.1 s,
   ``extreme_capsule`` 19.4 s, now 4.3 s, and Fig. 2b's program without
   its bootstrap 19.4 s, now 14.8 s, with the same answers.
+
+- An engine's sparse view keeps, with it, the sums of its entries for each
+  row and each column entity (``SparseView.sums``, kept with the build's
+  tables). A product of the view by the same number for every entity of
+  one sort, summed over it, is that number times the kept sums: the view
+  is not read. ``lift('pain')`` on neurostore, whose probability of
+  activation over a uniform choice of all 64 295 studies read the 1
+  billion entries of ``activated`` (57 s from disk), took 66 to 68 s in
+  a new process, now 7.5 to 8.2 s; the lifts agree to a relative
+  7.7e-14. A build reads each relation's frame once.
 
 - A choice over a few rows of an engine's view (the voxels of an image) by
   the view reads those rows alone, and a vector over a few of its columns
@@ -353,6 +374,20 @@ Unreleased
   form, which shows a relation of more than 60 rows in part: two rules
   reading relations differing in their middle rows got the same rewriting,
   and the second query the first one's answers.
+  
+- Magic sets: a query of the WMQL bundles ``uf``, ``ilf``, ``af`` or
+  ``ec`` on the Disconnectome engines fits in memory again. Since the
+  rewrite gave up on cycles of its own (#1391), these bundles were solved
+  unrewritten, which computes ``endpoint_anterior_of`` and
+  ``posterior_of`` whole: the product of 600 k endpoints, or 300 k
+  streamlines, by 285 term boxes. ``ans(x) :- uf(x, "left")`` went past
+  12 GB on ``neurosynth_disconnectome7t``; ``slf_i`` and ``cst`` fit,
+  but lost their magic sets too. A program reading a stored relation of
+  more than ``[MAGIC_SETS] seed_rows`` tuples is now first rewritten with
+  the bindings of the constants, the heads and the needed arguments
+  alone, which rarely has a cycle of its own: ``uf(x, "left")`` takes 7 s
+  and 0.4 GB, against 12.5 s and 0.65 GB before #1391; ``af`` 14 s
+  against 50 s; ``slf_i`` 0.2 GB against 0.5 GB on master.
 
 - AI assistant: an answer given when the ReAct agent ran out of steps,
   the last query that gave rows, says so: its summary reads *Out of steps:
